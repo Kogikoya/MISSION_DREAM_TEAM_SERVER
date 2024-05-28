@@ -13,7 +13,7 @@ function LogIn(props) {
     const userId = useSelector((state) => state.user.userId)
 
     useEffect(() => {
-        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
+        axios.get('http://localhost/api/CheckLoginState.php')
         .then(res => {
         console.log('로그인 상태 : ',res);
         if(res.data === true){
@@ -24,7 +24,7 @@ function LogIn(props) {
         console.error('Error fetching user info:', error)
         })
 
-        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/UserCnt.php')
+        axios.get('http://localhost/api/UserCnt.php')
         .then(res => {
             setUserCount(res.data);
         })
@@ -43,7 +43,7 @@ function LogIn(props) {
             const inputPw = document.getElementById('password').value;
             const keepLogIn = document.getElementById('keepLogIn').checked;
     
-            axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogIn.php',
+            axios.post('http://localhost/api/LogIn.php',
             {
                 id: inputId,
                 password: inputPw,

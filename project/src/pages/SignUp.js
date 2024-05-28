@@ -71,7 +71,7 @@ const SignUpForm = () => {
         const idValidationResult = formData.id.match(/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/);
         if (idValidationResult) {
             try {
-                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/IdCheck.php', {
+                const res = await axios.post('http://localhost/api/IdCheck.php', {
                     id: formData.id
                 });
                 console.log(res.data);
@@ -96,7 +96,7 @@ const SignUpForm = () => {
         const nameValidationResult = formData.nickName.match(/^(?=.*[a-zA-Z가-힣]).{2,10}$/);
         if (nameValidationResult) {
             try {
-                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/NickNameCheck.php', {
+                const res = await axios.post('http://localhost/api/NickNameCheck.php', {
                     nickName: formData.nickName 
                 });
                 console.log(res.data);
@@ -127,7 +127,7 @@ const SignUpForm = () => {
 
         if (isValid) {
             try {
-                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/SignUp.php', {
+                const res = await axios.post('http://localhost/api/SignUp.php', {
                     id: formData.id,
                     password: formData.password,
                     name: formData.nickName  
