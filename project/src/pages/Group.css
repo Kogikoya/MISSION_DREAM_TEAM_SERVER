@@ -1,0 +1,285 @@
+/* Group.css */
+
+.Group {
+  text-align: center;
+  user-select: none;
+  overflow-x: hidden;
+  height: 100vh;
+}
+
+/* clearfix 적용 */
+.Group::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+div {
+  box-sizing: border-box;
+}
+
+
+.info-container {
+  flex-direction: column;
+  background-color: var(--sub-color1);
+  width: 25%;
+  height: calc(100vh - 80px);
+  min-height: 100%;
+  float: left;
+}
+
+
+.calculate {
+  border-radius: 30px;
+  background-color: white;
+  border: 3px solid var(--main-color);
+  padding: 10px;
+  width: 80%;
+  margin: 0 auto;
+  margin-top: 20px;
+  font-weight: bold;
+  font-family: "font_tennine";
+  font-size: 20px;
+}
+
+.members{
+  background-color: rgb(255, 255, 255);
+  width: 80%;
+  margin: 0 auto;
+  margin-top: 20px;
+  padding-bottom: 10px;
+  height: 80%;
+}
+
+.infoMembers::-webkit-scrollbar {
+  display: none;
+}
+
+.members::-webkit-scrollbar {
+  display: none;
+}
+
+.infoMember{
+  display: block;
+  background-color: white;
+  font-size: 30px;
+  text-align: left;
+  padding-left: 20px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  font-family: "font_tennine";
+}
+
+.infoMembers{
+  overflow-y: scroll;
+  height: 90%;
+}
+
+.member{
+  background: linear-gradient(to right, var(--gra-color3), var(--gra-color2), var(--gra-color1));
+  width: 90%;
+  margin: 0 auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: "font_NanumSquare";
+  font-weight: bold;
+}
+
+.memberMissionList{
+  background-color: white;
+  width: 95%;
+  margin: 0 auto;
+  margin-top: 10px;
+}
+
+.groupExit{
+  color:#a1a1a1;
+  text-align: left;
+  padding-top: 20px;
+  padding-left: 30px;
+}
+
+.groupCalendar-container {
+  padding: 10px;
+}
+
+.groupCalendar {
+  float: right;
+  width: 75%;
+  min-height: calc(100vh - 100px);
+  height: 100%;
+  background-color: white;
+  padding: 40px;
+  border: 1.5px solid var(--sub-color3);
+  border-radius: 5px;
+  margin: 0px;
+}
+
+
+.groupName{
+  font-size: 70px;
+  font-weight: 500;
+  font-family: "font_tennine" !important;
+  background: linear-gradient(to right,#30C8A4, #F9E23D, #FEBE01);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  width: auto;
+  text-align: left;
+}
+
+
+.penaltyPerPoint{
+  background-color: var(--main-color);
+  border-radius: 20px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin: 0 auto;
+  font-weight: 700;
+  color: white;
+  font-size: 20px;
+  width: 80%;
+}
+
+.groupNotice{
+  display: block;
+  text-align: left;
+  width: 100%;
+  background-color: var(--sub-color1);
+  padding: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-family: "font_NanumSquare";
+  font-weight: bold;
+}
+
+.groupInfoTable{
+  width: 100%;
+}
+
+.groupStats{
+  width: 100%;
+  height: auto;
+  border: var(--sub-color3) 2px solid;
+}
+
+.memberInfo {
+  border-collapse: collapse;
+  margin: 0 auto; /* 테이블을 상위 요소의 좌우 가운데에 배치 */
+  width: 100%;
+}
+
+.memberInfo td {
+  padding: 8px; /* 셀 간의 간격을 설정 */
+  width: calc(100% / 3); /* 세 열이므로 각 열의 너비를 33.33%로 설정 */
+}
+
+.missionTable{
+  background-color: white;
+  width: 100%;
+  margin: 0px auto;
+}
+
+.missionTable th,
+.missionTable td {
+    font-size: 15px;
+}
+
+
+.missionTable th:nth-child(1),
+.missionTable td:nth-child(1) {
+    width: 15%; /* 달성의 너비를 10%로 설정 */
+}
+
+.missionTable th:nth-child(2),
+.missionTable td:nth-child(2) {
+    width: 70%; /* 미션의 너비를 80%로 설정 */
+}
+
+.missionTable th:nth-child(3),
+.missionTable td:nth-child(3) {
+    width: 15%; /* 인증의 너비를 10%로 설정 */
+}
+
+.backOfWeek{
+  background: var(--gra-color3);
+  color: white;
+  border: 0px;
+  border-radius: 5px;
+  font-family: "font_NanumSquare";
+  font-size: 25px;
+}
+
+.frontOfWeek{
+  background: var(--gra-color3);
+  color: white;
+  border: 0px;
+  border-radius: 5px;
+  font-family: "font_NanumSquare";
+  font-size: 25px;
+}
+
+.date{
+  font-family: "font_NanumSquare";
+  width: 300px;
+  display: inline-block;
+  font-size: 25px;
+}
+
+.button-exit{
+  background: none;
+  border: none;
+  color: var(--sub-color3);
+  margin: 10px;
+}
+
+.noticeText{
+  font-weight: bold;
+}
+
+
+.calculateModal{
+  align-content: center;
+}
+
+.button-camera {
+  border: none;
+  background-color: white;
+}
+
+.photoModal{
+  align-content: center;
+  font-family: "font_tennine";
+}
+
+.modalTitle{
+  font-family: "font_tennine";
+  font-size: 50px;
+}
+
+.tipMessage{
+  font-family: "font_tennine";
+  color: #8a8a8a;
+  text-align: center; /* 가운데 정렬 */
+    left: 50%; /* 가로 중앙 정렬을 위해 왼쪽 위치를 화면 가로 중앙으로 이동 */
+}
+
+.table-responsive{
+  font-family: "font_NanumSquare";
+  font-weight: bold;
+}
+
+.dateRow{
+  height: 50px;
+}
+
+.nameRow{
+  height: 50px;
+}
+
+
+
+
+
