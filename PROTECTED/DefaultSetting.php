@@ -6,12 +6,12 @@ header("Access-Control-Allow-Headers: Accept, Content-Type, Content-Length, Acce
 //----------
 header('Access-Control-Allow-Headers: X-Requested-With, Origin, Content-Type, X-CSRF-Token, Accept'); // 그냥 추가
 
-header('Access-Control-Allow-Origin: http://localhost:3000');
-//header('Access-Control-Allow-Origin: http://dev.localhost:3000');
+header('Access-Control-Allow-Origin: http://www.missiondreamteam.kro.kr:3000');
+//header('Access-Control-Allow-Origin: http://dev.www.missiondreamteam.kro.kr:3000');
 
 
 // $http_origin = $_SERVER['HTTP_ORIGIN'];
-// if ($http_origin == "http://dev.local:3000" || $http_origin == "http://localhost:3000"){
+// if ($http_origin == "http://dev.local:3000" || $http_origin == "http://www.missiondreamteam.kro.kr:3000"){
 //     header("Access-Control-Allow-Origin: $http_origin");
 // }
 
