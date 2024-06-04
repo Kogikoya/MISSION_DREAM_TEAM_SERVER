@@ -15,7 +15,6 @@ function LogIn(props) {
     useEffect(() => {
         axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
         .then(res => {
-        console.log('로그인 상태 : ',res);
         if(res.data === true){
             navigate('/');
         }
@@ -31,6 +30,17 @@ function LogIn(props) {
         .catch(error => {
             console.error('Error fetching user count:', error)
         });
+
+        const handleKeyPress = (event) => {
+            if (event.key === 'Enter') {
+                onClickLogin(event);
+            }
+        };
+
+        document.addEventListener('keypress', handleKeyPress);
+        return () => {
+            document.removeEventListener('keypress', handleKeyPress);
+        };
     },[]);
 
     const onClickLogin = (event) => {
@@ -50,7 +60,6 @@ function LogIn(props) {
                 KeepLogIn: keepLogIn
             })
             .then((res)=>{
-                console.log(res)
                 if (res.data == true) {
                     alert('로그인에 성공했습니다.');
                     navigate('/');
@@ -86,6 +95,9 @@ function LogIn(props) {
                     <img className="img-cursor" src="/img/cursor.png"></img>
                 </div>
                 <div className="login-right">
+                    <div className='login-logo'>
+                        <img className="login-logo-img" src="/img/dream.png"></img>
+                    </div>
                     <input className="login-input login-inputtext" type="text" placeholder="ID" id="id"></input>
                     <input className="login-input login-inputtext" type="password" placeholder="PASSWORD" id="password"></input>
                     <button className="login-button" onClick={onClickLogin}>미션하러 가기</button>

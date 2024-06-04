@@ -49,15 +49,24 @@ if (empty($group_member_id_list)) {
         $error_message = ""; // 각 회원 루프마다 에러 메시지 초기화
 
         try {
-            $sql = "SELECT name FROM member WHERE id = ?";
+            $sql = "SELECT name, profileImage FROM member WHERE id = ?";
             $stmt = $db->prepare($sql);
             $stmt->bind_param("s", $member_id);
             $stmt->execute();
             $result = $stmt->get_result();
-            $member_name = $result->fetch_assoc()['name'];
+            $row = $result->fetch_assoc();
+            $member_name = $row['name'];
+            $member_profile = $row['profileImage'];
             $stmt->close();
+
+            if($member_profile == null){
+                // $member_profile = "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png";
+                $member_profile = "img/default_profile.png";
+            }
+
         } catch (Exception $e) {
             $member_name = null;
+            $member_profile = null;
             $error_message .= $e->getMessage() . "\n";
         }
 
@@ -115,6 +124,7 @@ if (empty($group_member_id_list)) {
             array(
                 "id" => $member_id,
                 "name" => $member_name,
+                "profileImage"=>$member_profile,
                 "missionList" => $mission_list,
                 "missionTotalCount" => $mission_total_count,
                 "missionNotCompleteCount" => $mission_not_complete_count,
@@ -128,5 +138,4 @@ if (empty($group_member_id_list)) {
 echo json_encode($member_list);
 
 $db->close();
-
 ?>

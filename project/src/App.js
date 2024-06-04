@@ -6,7 +6,7 @@ import { Button, Modal, Nav } from 'react-bootstrap';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './App.css';
 import Group from './pages/Group.js';
 import LogIn from './pages/LogIn.js';
@@ -19,19 +19,18 @@ function App() {
   let [groupList, setGroupList] = useState([]);
   let [join, setJoin] = useState(false);
   let [create, setCreate] = useState(false);
+  let [change, setChange] = useState(false);
 
   let [userName, setUserName] = useState();
   let [point, setPoint] = useState();
   let [missionInput, setMissionInput] = useState('');
+  let [profileImage, setProfileImage] = useState('');
   let [tap, setTap] = useState(0);
   let navigate = useNavigate();
-  
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
     .then(res => {
-      console.log('로그인 상태 : ',res);
       if(res.data === false){
         navigate('/login');
       }
@@ -40,7 +39,7 @@ function App() {
       console.error('Error fetching user info:', error)
     })
   }, []);
-  
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -55,8 +54,24 @@ function App() {
       }
     };
     fetchUserInfo();
-  });
 
+    const fetchProfileImage = async () => {
+      try {
+        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
+        let originalPath = res.data.profilePath;
+        if (originalPath === '/img/default_profile.png') {
+            setProfileImage(originalPath);
+        } else {
+            let trimmedPath = originalPath.replace(/^..\/project\/public/, "");
+            setProfileImage(trimmedPath);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchProfileImage();
+  });
+  
   const handleAddMission = async () => {
     try {
       if (missionInput.trim() === '') {
@@ -84,7 +99,6 @@ function App() {
       console.error('Error adding mission:', error);
     }
   };
-  
   return (
     <div className="App">
       <Routes>
@@ -92,9 +106,10 @@ function App() {
           <div>
             <div className="nav-bar">
               <img className="img-logo" onClick={()=>{navigate('/')}} src="/img/dream.png"/>
-              <div>
+              <div className="nav-profile">
+                <img className="img-profile" onClick={()=>{ setChange(true) }} src={profileImage} alt="Profile"></img>
                 <h6>{ userName }</h6>
-                <h6>오늘의 미션 : { point }</h6>
+                <h6>today { point }</h6>
                 <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
                 <button className="button-logout" onClick={()=>{
                   axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
@@ -113,7 +128,11 @@ function App() {
                   <h1>To do list</h1>
                   <input className="input-todo" type="text" value={missionInput} onChange={(e)=>{ setMissionInput(e.target.value)}}placeholder="오늘의 할 일을 작성하세요!"></input>
                   <button className="button-todo-plus" onClick={handleAddMission}>+</button>
-                </> : <h1>Calendar</h1>
+                </> :
+                <>
+                <h1>Calendar</h1>
+                <h5 className="top-calendar-text">할 건 다하고 노는거니?</h5>
+                </>
               }
               <Nav variant="tabs" defaultActiveKey="todo" className="tap">
                 <Nav.Item>
@@ -140,6 +159,7 @@ function App() {
       </Routes>
       <CreateGroup create={create} setCreate={setCreate} setGroupList={setGroupList}/>
       <JoinGroup join={join} setJoin={setJoin} setGroupList={setGroupList}/>
+      <ChangeProfileImage change={change} setChange={setChange} profileImage={profileImage}/>
     </div>
   );
 }
@@ -147,12 +167,16 @@ function App() {
 
 const fetchMissions = async (setMissionList) => {
   try {
-      const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/Show_mission.php?`)
+    const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/Show_mission.php?`)
+    if (res.data == null) {
+      setMissionList([]);
+    } else {
       const missions = res.data.map(mission => ({
         ...mission,
         isCompleted: mission[4] === 1
       }));
       setMissionList(missions);
+    }
   } catch (error) {
       console.error('Error fetching missions:', error)
   }
@@ -170,6 +194,9 @@ const fetchGroups = async (setGroupList) => {
 // Todo 탭
 function ToDo(props) {
   const inputFileRef = useRef([]);
+  let [photo, setPhoto] = useState(false);
+  let [photoSrc, setPhotoSrc] = useState('');
+  let [photoMissionName, setPhotoMissionName] = useState('');
   
   useEffect(() => {
     fetchMissions(props.setMissionList);
@@ -177,13 +204,20 @@ function ToDo(props) {
   }, []);
   
   const handleDeleteMission = async (i) => {
-    try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Delete_mission.php', {
-        mission_idx: props.missionList[i][0]
-      })
-      fetchMissions(props.setMissionList);
-    } catch (error) {
-      console.error('Error deleting mission:', error);
+    const currentDate = new Date();
+    const currentHour = currentDate.getHours();
+
+    if (currentHour >= 5 && currentHour < 21) {
+      try {
+        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Delete_mission.php', {
+          mission_idx: props.missionList[i][0]
+        })
+        fetchMissions(props.setMissionList);
+      } catch (error) {
+        console.error('Error deleting mission:', error);
+      }
+    } else {
+      alert("미션은 05:00~21:00에만 삭제 가능합니다!");
     }
   };
   
@@ -216,6 +250,14 @@ function ToDo(props) {
     }
   };
 
+  const handlePhotoOpen = (photoPath, missionName) => {
+    let absolutePath = photoPath.replace('../project/public/', '');
+    absolutePath = absolutePath.replace('..', '');
+    setPhotoSrc(`/${absolutePath}`);
+    setPhoto(true);
+    setPhotoMissionName(missionName);
+  };
+
   return(
     <div className="todo-tap">
       <div className="row">
@@ -228,7 +270,16 @@ function ToDo(props) {
                   <input type="checkbox" className="mission-checkbox" checked={content.isCompleted || false} readOnly/>
                   <h6 id={ content[2] } style={{ textDecoration: content.isCompleted ? 'line-through' : 'none' }}>{ content[2] }</h6>
                   <input type="file" accept="image/*" ref={(el) => (inputFileRef.current[i] = el)} style={{ display: 'none' }} onChange={(e) => handleImageUpload(e, content[0], i)} />
-                  <img className="imgs" src={content.isCompleted ? "/img/camera_gray.png" : "/img/camera.png"} onClick={() => inputFileRef.current[i].click()} />
+                  <img className="imgs" src={content.isCompleted ? "/img/camera_gray.png" : "/img/camera.png"}
+                    onClick={() => {
+                    if (content.isCompleted) {
+                      handlePhotoOpen(content[3],content[2])
+                    } else {
+                      inputFileRef.current[i].click();
+                    }}}
+                    onContextMenu={() => {
+                      if (content.isCompleted) {
+                        inputFileRef.current[i].click();}}}/>
                   <button className={`button-x ${content.isCompleted ? 'gray-button' : ''}`} onClick={()=>{ handleDeleteMission(i) }}>X</button>
                 </div>
               )
@@ -251,7 +302,10 @@ function ToDo(props) {
                 const returnString = groupPrice?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 return (
                   <div className="groupList" key={i}>
-                    <span className='myGroupPrice'>{ '₩ '+returnString }</span>
+                    <div className='myGroupBox'>
+                      <span className='myGroupPrice'>{ '₩ '+returnString }</span>
+                      <span className="myGroupCount">{content.groupMemberCnt}</span>
+                    </div>
                     <div className="myGroupName" onClick={()=>{
                       props.navigate('/group', { state: { pageGroupName: content.groupName.group_name } });
                     }}>{ content.groupName.group_name }</div>
@@ -265,8 +319,30 @@ function ToDo(props) {
           </div>
         </div>
       </div>
+      <MissionPhoto
+        photo={photo}
+        setPhoto={setPhoto}
+        photoSrc={photoSrc}
+        photoMissionName={photoMissionName}
+      />
     </div>
   )
+}
+
+
+function MissionPhoto(props) {
+  const modalTitle = props.photoMissionName;
+
+  return (
+      <Modal show={props.photo} onHide={() => {props.setPhoto(false)}} className="main-modal">
+          <Modal.Header closeButton>
+              <Modal.Title>{modalTitle}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+              <img src={props.photoSrc} alt={modalTitle} style={{ width: '100%' }} />
+          </Modal.Body>
+      </Modal>
+  );
 }
 
 
@@ -274,7 +350,9 @@ function ToDo(props) {
 function MyCalendar() {
   const [value, setValue] = useState(new Date());
   const [pointsData, setPointsData] = useState([]);
-  
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [dailyData, setDailyData] = useState([]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -282,7 +360,7 @@ function MyCalendar() {
         if (res.data) {
           const formattedData = res.data.map(entry => ({
             date: entry.date.split(' ')[0],
-            point: parseInt(entry.point, 10)*(-1)
+            point: parseInt(entry.point, 10) * (-1)
           }));
           setPointsData(formattedData);
         }
@@ -293,8 +371,8 @@ function MyCalendar() {
 
     fetchUserData();
   }, []);
-  
-  const maxYAxis = 0; // Set the maximum value for YAxis
+
+  const maxYAxis = 0;
 
   const getPointForDate = (date) => {
     const pointEntry = pointsData.find(
@@ -306,49 +384,130 @@ function MyCalendar() {
   const getColorForPoint = (point) => {
     if (point === null) return 'pointNull';
     if (point === 0) return 'point0';
-    if (point >= -2) return 'point2';
-    if (point >= -4) return 'point4';
-    return 'point5';
+    if (point >= -1) return 'point1';
+    if (point >= -3) return 'point3';
+    if (point >= -5) return 'point5';
+    return 'point6';
   };
+
+  const getChartColorForPoint = (point) => {
+    if (point === null) return '#ffffff';
+    if (point === 0) return '#ffffff';
+    if (point >= -1) return '#E7FDED';
+    if (point >= -3) return '#CFFBDB';
+    if (point >= -5) return '#B7FACA';
+    return '#9FF8B8';
+  };
+
+  useEffect(() => {
+    const calculateWeeklyData = () => {
+      const filteredData = pointsData.filter(entry => moment(entry.date).isAfter(moment().subtract(5, 'weeks')));
+      
+      const weeks = [];
+      const weekSums = {};
+
+      filteredData.forEach(entry => {
+        const week = moment(entry.date).startOf('isoWeek').format('YYYY-MM-DD');
+        if (!weekSums[week]) {
+          weekSums[week] = 0;
+        }
+        weekSums[week] += entry.point;
+      });
+
+      for (const week in weekSums) {
+        weeks.push({ week, point: weekSums[week] });
+      }
+
+      setWeeklyData(weeks);
+    };
+    calculateWeeklyData();
+  }, [pointsData]);
+
+  
+  const getDaysOfWeekData = (startOfWeek) => {
+    const daysOfWeek = [];
+    for (let i = 0; i < 7; i++) {
+      const currentDay = startOfWeek.clone().add(i, 'days');
+      const point = getPointForDate(currentDay.format('YYYY-MM-DD'));
+      daysOfWeek.push({ day: currentDay.format('YYYY-MM-DD'), point });
+    }
+    return daysOfWeek;
+  };
+
+  useEffect(() => {
+    const currentWeekStart = moment(value).startOf('isoWeek');
+    const dailyData = getDaysOfWeekData(currentWeekStart);
+    setDailyData(dailyData);
+  }, [value, pointsData]);
 
   return (
     <div className='calendar-tap'>
-      <Calendar
-        onChange={setValue}
-        value={value}
-        formatDay={(locale, date) => moment(date).format("DD")}
-        className="myCalendar"
-        tileContent={({ date, view }) => {
-          const point = getPointForDate(date);
-          return (
-            <div className={`point ${getColorForPoint(point)}`}>
-              {point !== null && <span className="point-value">{point}</span>}
-            </div>
-          );
-        }}
-        tileClassName={({ date }) => {
-          const point = getPointForDate(date);
-          return `react-calendar__tile--${getColorForPoint(point)}`;
-        }}
-      />
-      <div style={{ width: '100%', height: '300px' }}>
-        <ResponsiveContainer>
-          <LineChart
-            data={pointsData}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis allowDataOverflow={false} domain={[maxYAxis, 0]} tickCount={5} />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="point" stroke="#8884d8" activeDot={{ r: 8 }} />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="row">
+        <div className="col-md-1"></div>
+        <div className="col-md-5">
+          <Calendar
+            onChange={setValue}
+            value={value}
+            formatDay={(locale, date) => moment(date).format("DD")}
+            className="myCalendar"
+            tileContent={({ date, view }) => {
+              const point = getPointForDate(date);
+              return (
+                <div className={`point ${getColorForPoint(point)}`}>
+                  {point !== null && <span className="point-value">{point}</span>}
+                </div>
+              );
+            }}
+            tileClassName={({ date }) => {
+              const point = getPointForDate(date);
+              return `react-calendar__tile--${getColorForPoint(point)}`;
+            }}
+          />
+        </div>
+        <div className="col-md-5 myChartContainer">
+        <div className="myCharts">
+          <ResponsiveContainer>
+            <BarChart
+              data={dailyData}
+              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" tickFormatter={(day) => moment(day).format('MM-DD')} />
+              <YAxis domain={[dataMin => (dataMin < 0 ? dataMin : 0), 0]} tickCount={5} />
+              <Tooltip />
+              <Bar
+                dataKey="point"
+                fill="#87F6A6"
+              >
+                {dailyData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getChartColorForPoint(entry.point)} />
+                ))}
+              </Bar>
+            </BarChart>
+            <LineChart
+              data={weeklyData}
+              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="week" tickFormatter={(week) => `${moment(week).format('YYYY-MM-DD')}~`} />
+              <YAxis domain={[dataMin => (dataMin < 0 ? dataMin : 0), 0]} tickCount={5} />
+              <Tooltip labelFormatter={(value) => `${moment(value).format('YYYY-MM-DD')}~${moment(value).add(6, 'days').format('YYYY-MM-DD')}`} />
+              <Line
+                type="linear"
+                dataKey="point"
+                stroke="#30C88B"
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        </div>
+        <div className="col-md-1"></div>
       </div>
     </div>
   );
 }
+
 
 
 function CreateGroup(props) {
@@ -548,5 +707,110 @@ function JoinGroup(props) {
     </Modal>
   );
 }
+
+
+function ChangeProfileImage(props) {
+  const [selectedFile, setFile] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [fileName, setFileName] = useState('');
+
+  useEffect(() => {
+    if (!props.change) {
+      setIsEditing(false);
+    }
+  }, [props.change]);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    setFile(file);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('imgFile', selectedFile);
+
+    try {
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      if (res.data == true) {
+        alert("프로필 사진이 변경되었습니다!");
+        props.setChange(false);
+      }
+      else {
+        console.log(res.data.error);
+      }
+    } catch (error) {
+      console.log(`업로드 실패: ${error.message}`);
+    }
+  };
+
+  const handleRemove = async () => {
+    const confirmRemove = window.confirm('정말로 프로필 사진을 제거하시겠습니까?');
+
+    if (!confirmRemove) {
+      return;
+    }
+
+    try {
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+      if (res.data) {
+        alert("프로필 사진이 제거되었습니다!");
+        props.setChange(false);
+      } else {
+        console.log(res.data.error);
+      }
+    } catch (error) {
+      console.log(`제거 실패: ${error.message}`);
+    }
+  };
+
+  const handleFileUpload = (event) => {
+    const newFileName = event.target.value.split('\\').pop();
+    setFileName(newFileName);
+  };
+
+  return (
+    <Modal show={props.change} onHide={() => props.setChange(false) } className="main-modal">
+      <Modal.Header closeButton>
+        <Modal.Title className='main-modal-title'>프로필 사진</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className='modal-change'>
+        {isEditing ? (
+          <>
+            <img className="img-left" src="/img/left.png" onClick={()=>{setIsEditing(false);}}></img>
+            <div className='modal-change-editing'>
+              <div>
+              <input type="file" onChange={(event) => {
+                  handleFileChange(event);
+                  handleFileUpload(event);
+              }} id="input-file" />
+              <label for="input-file">업로드</label>
+              <input type="text" value={fileName} placeholder='선택된 파일이 없습니다.' readOnly></input>
+              </div>
+              <button className='button-profile' onClick={handleUpload}>변경하기</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <img className="img-profile-change" src={props.profileImage}></img>
+            <div className='modal-change-buttons'>
+              <button className='button-profile profile-remove' onClick={handleRemove}>제거</button>
+              <button className='button-profile' onClick={()=> {setIsEditing(true);}}>변경</button>
+            </div>
+          </>
+        )}
+      </Modal.Body>
+    </Modal>
+  );
+}
+
 
 export default App;
