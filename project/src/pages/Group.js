@@ -47,7 +47,7 @@ function GroupPage(props) {
     useEffect(() => {
         const checkLoginState = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php');
                 if (res.data === 'true') {
                     setIsLoggedIN(true);
                 } else {
@@ -60,7 +60,7 @@ function GroupPage(props) {
 
         const fetchUserInfo = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
                 const userData = res.data;
                 setUserName(userData.name);
                 const missionCnt = userData.totalMissionCnt - userData.noMissionCnt;
@@ -73,7 +73,7 @@ function GroupPage(props) {
 
         const fetchProfileImage = async () => {
             try {
-              const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
+              const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageShow.php');
               let originalPath = res.data.profilePath;
               if (originalPath === '/img/default_profile.png') {
                   setProfileImage(originalPath);
@@ -92,7 +92,7 @@ function GroupPage(props) {
 
     const fetchPenaltyPerPoint = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowPenalty.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowPenalty.php', { groupName: group_name });
             const bringpenaltyPerPoint = res.data; // 벌점 당 포인트 가져 오기
             setPenaltyPerPoint(bringpenaltyPerPoint); // 상태에 벌점 당 포인트 설정
         } catch (error) {
@@ -105,10 +105,9 @@ function GroupPage(props) {
 
     const fetchNotice = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowNotice.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowNotice.php', { groupName: group_name });
             const noticeData = res.data; // 공지 가져오기
             setNotice(noticeData); // 가져온 공지를 상태에 설정
-            console.log(notice);
         } catch (error) {
             console.error('에러 fetching notice:', error);
         }
@@ -117,19 +116,19 @@ function GroupPage(props) {
         fetchNotice();
     }, [group_name]);
 
+    const fetchGroupMemberList = async () => {
+        try {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberInfo.php', { groupName: group_name });
+            setMembers(res.data);
+        } catch (error) {
+            console.error('그룹멤버 실패', error);
+        }
+    };
+    
     useEffect(() => {
-        const fetchGroupMemberList = async () => {
-            try {
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberInfo.php', { groupName: group_name });
-                setMembers(res.data);
-            } catch (error) {
-                console.error('그룹멤버 실패', error);
-            }
-        };
-
         const fetchGroupMemberOverall = async () => {
             try {
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberPoint.php', { groupName: group_name });
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberPoint.php', { groupName: group_name });
                 const pointsByDate = {};
                 res.data.forEach(member => {
                     const memberId = member.id;
@@ -166,7 +165,7 @@ function GroupPage(props) {
         const confirmed = window.confirm("진짜 탈퇴할거에요?진짜?ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ가지마세용");
         if (confirmed) {
             try {
-                await axios.post('http://www.missiondreamteam.kro.kr/api/ExitGroup.php', { groupName: group_name });
+                await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ExitGroup.php', { groupName: group_name });
                 alert("탈퇴 성공..... 메인페이지로 이동할게요....");
                 // 메인 페이지로 이동
                 navigate('/');
@@ -193,6 +192,7 @@ function GroupPage(props) {
     const handlePhotoOpen = (photoPath, memberName, missionName) => {
         let absolutePath = photoPath.replace('../project/public/', '');
         absolutePath = absolutePath.replace('..', '');
+        console.log(absolutePath);
         setModalPhotoSrc(`/${absolutePath}`);
         setShowPhotoModal(true);
         setModalMemberName(memberName); // 멤버 이름 저장
@@ -221,7 +221,7 @@ function GroupPage(props) {
 
     const calculateColorByRank = (rank, totalRanks) => {
         const mainColor = '#FAF29D';
-        const lightenFactor = 1 - (rank / totalRanks) * 0.8; // 순위가 높을수록 색상이 연해짐(overall이 클수록 색상이 진해짐)
+        const lightenFactor = 1 - (rank / totalRanks) * 0.9; // 순위가 높을수록 색상이 연해짐(overall이 클수록 색상이 진해짐)
         return `rgba(${parseInt(mainColor.slice(1, 3), 16)}, ${parseInt(mainColor.slice(3, 5), 16)}, ${parseInt(mainColor.slice(5, 7), 16)}, ${lightenFactor})`;
     };      
 
@@ -245,7 +245,7 @@ function GroupPage(props) {
                             <h6>today { point }</h6>
                             <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
                             <button className="button-logout" onClick={()=>{
-                            axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
+                            axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
                             .then(res => {
                                 navigate('/login')
                             })
@@ -277,45 +277,48 @@ function GroupPage(props) {
                                                         <table className="memberInfo" onClick={() => toggleMissionTable(id)}>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td><img className="img-profile" src={profileImage === '/img/default_profile.png' ? profileImage : profileImage.replace(/^..\/project\/public/, "") } alt="Profile"/></td>
-                                                                    <td>{name}</td>
-                                                                    <td>{missionTotalCount - missionNotCompleteCount}/{missionTotalCount}</td>
-                                                                    <td>{missionTotalPoint === 0 ? '0' : (missionTotalPoint > 0 ? `-${missionTotalPoint}` : missionTotalPoint)}pt</td>
+                                                                    <td style={{width: '10%'}}><img className="img-profile" src={profileImage === '/img/default_profile.png' ? profileImage : profileImage.replace(/^..\/project\/public/, "") } alt="Profile"/></td>
+                                                                    <td style={{width: '50%'}}>{name}</td>
+                                                                    <td style={{width: '20%'}}>{missionTotalCount - missionNotCompleteCount}/{missionTotalCount}</td>
+                                                                    <td style={{width: '20%'}}>{missionTotalPoint === 0 ? '0' : (missionTotalPoint > 0 ? `-${missionTotalPoint}` : missionTotalPoint)}pt</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
                                                     </span>
                                                     {memberMissionTables[id] && (
                                                         <table className="missionTable">
-                                                            <tbody>
-                                                                {/* missionList를 반복하여 각 미션을 출력 */}
-                                                                {missionList.map((mission, missionIndex) => {
-                                                                    const missionObject = JSON.parse(mission);
-                                                                    const missionComplete = missionObject.complete;
-                                                                    const missionName = missionObject.mission;
-                                                                    const missionPhoto = missionObject.photo;
-                                                                    return (
-                                                                        <tr key={missionIndex}>
-                                                                            <td>
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={missionComplete === 1 ? true : false}
-                                                                                    disabled
-                                                                                />
-                                                                            </td>
-                                                                            <td>{missionName}</td>
-                                                                            <td>
-                                                                                {missionPhoto ? (
-                                                                                    <button className="button-camera" onClick={() => handlePhotoOpen(missionPhoto, name, missionName)}><img className="imgs" src="/img/camera.png" /></button>
-                                                                                ) : (
-                                                                                    <button className="button-camera" disabled><img className="imgs" src="/img/camera_gray.png" /></button>
-                                                                                )}
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
+                                                        <tbody>
+                                                            {/* missionList를 반복하여 각 미션을 출력 */}
+                                                            {missionList.map((mission, missionIndex) => {
+                                                                const missionObject = JSON.parse(mission);
+                                                                const missionComplete = missionObject.complete;
+                                                                const missionName = missionObject.mission;
+                                                                const missionPhoto = missionObject.photo;
+                                                                const isLastMission = missionIndex === missionList.length - 1;
+                                                                return (
+                                                                    <tr key={missionIndex} className={isLastMission ? "missionNameLast" : "missionName"}>
+                                                                        <td valign='middle'>
+                                                                            <div className="checkbox">
+                                                                                <input type="checkbox" checked={missionComplete === 1 ? true : false} disabled/>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>{missionName}</td>
+                                                                        <td>
+                                                                            {missionPhoto ? (
+                                                                                <button className="button-camera" onClick={() => handlePhotoOpen(missionPhoto, name, missionName)}>
+                                                                                    <img className="imgs" src="/img/camera.png" />
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button className="button-camera" disabled>
+                                                                                    <img className="imgs" src="/img/camera_gray.png" />
+                                                                                </button>
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
                                                     )}
                                                 </div>
                                             );
@@ -427,15 +430,9 @@ function GroupPage(props) {
             </Routes>
             <PointModal showModal={showModal} setShowModal={setShowModal} members={members} penalty_per_point={penaltyPerPoint} group_name={group_name} />
             <SettingModal showSettingModal={showSettingModal} setShowSettingModal={setShowSettingModal} group_name={group_name} />
-            <PhotoModal
-                showPhotoModal={showPhotoModal}
-                setShowPhotoModal={setShowPhotoModal}
-                modalPhotoSrc={modalPhotoSrc}
-                memberName={modalMemberName}
-                missionName={modalMissionName}
-            />
+            <PhotoModal showPhotoModal={showPhotoModal} setShowPhotoModal={setShowPhotoModal} modalPhotoSrc={modalPhotoSrc} memberName={modalMemberName} missionName={modalMissionName}/>
             <UpdateGroup update={update} setUpdate={setUpdate} group_name={group_name} penaltyPerPoint={penaltyPerPoint} notice={notice} fetchPenaltyPerPoint={fetchPenaltyPerPoint} fetchNotice={fetchNotice}/>
-            <ChangeProfileImage change={change} setChange={setChange} profileImage={profileImage}/>
+            <ChangeProfileImage change={change} setChange={setChange} profileImage={profileImage} fetchGroupMemberList={fetchGroupMemberList}/>
         </div>
     );
 }
@@ -457,7 +454,11 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
     let rank = 1;
     let sameRankCount = 0;
 
-    const tipMessage = "이번엔 꼴찌가 1등에게 벌금을 몰아주세요!";
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [calculationResult, setCalculationResult] = useState(null);
+
+    const tipMessage = "꼴찌가 1등에게 벌금을 몰아주세요!";
 
     const parsedMembers = members.map((member) => JSON.parse(member));
     const rankedMembers = parsedMembers
@@ -473,82 +474,136 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
         });
 
     const getRankStyle = (rank, index, totalMembers) => {
-        if (rank === 1) return { color: 'gold' };
-        if (rank === 2) return { color: 'silver' };
-        if (rank === 3) return { color: '#CD7F32' };
-        if (index === totalMembers - 1) return { color: 'red' };
-        return { color: '#87F6A6' };
+        if (rank === 1) return { backgroundColor: 'gold', color: 'white', textAlign: 'center' };
+        if (rank === 2) return { backgroundColor: 'silver', color: 'white', textAlign: 'center' };
+        if (rank === 3) return { backgroundColor: '#CD7F32', color: 'white', textAlign: 'center' };
+        if (index === totalMembers - 1) return { backgroundColor: 'red', color: 'white', textAlign: 'center' };
+        return { backgroundColor: '#87F6A6', color: 'white', textAlign: 'center' };
     };
 
     const handlePointCalculation = async (group_name, penalty_per_point) => {
+        setLoading(true);
+        setShowConfirmModal(false);
+
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/Do_cost_settlement.php', { group_name: group_name });
-            console.log(group_name);
-            alert("드림이가 정산에 성공했어요!");
-            window.location.reload();
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Do_cost_settlement.php', { group_name: group_name });
+            setCalculationResult('success');
         } catch (err) {
-            alert("드림이가 정산에 실패했어요...");
+            setCalculationResult('failure');
+        } finally {
+            setLoading(false);
+            setShowResultModal(true);
         }
     };
 
+    const [showResultModal, setShowResultModal] = useState(false);
+
     return (
-        <Modal show={showModal} onHide={() => setShowModal(false)} className='calculateModal modal-xl'>
-            <Modal.Header closeButton>
-                <div className='d-flex justify-content-between align-items-center w-100'>
-                    <div></div>
-                    <div className='modalTitle'>이번 정산 결과는?</div>
-                    <div className='penaltyPerPointDiv'>1 pt = {penalty_per_point} 원</div>
-                    <div></div>
-                </div>
-            </Modal.Header>
-            <Modal.Body>
-                <div className='row'>
-                    <div className='col text-center'>
-                        <div className='tipMessage'>tip: {tipMessage}</div>
+        <>
+            <Modal show={showModal} onHide={() => setShowModal(false)} className='calculateModal modal-xl'>
+                <Modal.Header closeButton>
+                    <div className='d-flex justify-content-between align-items-center w-100'>
+                        <div></div>
+                        <div className='modalTitle'>이번 정산 결과는?</div>
+                        <div className='penaltyPerPointDiv'>1 pt = {penalty_per_point} 원</div>
+                        <div></div>
                     </div>
-                </div>
-                <div className='table-responsive'>
-                    <table className='table'>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>이름</th>
-                                <th>포인트</th>
-                                <th>페널티 금액</th>
-                                <th>총 벌금</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rankedMembers.map((member, index) => {
-                                if (prevPoint !== member.missionTotalPoint) {
-                                    rank += sameRankCount;
-                                    sameRankCount = 1;
-                                } else {
-                                    sameRankCount++;
-                                }
-                                prevPoint = member.missionTotalPoint;
-                                const rankStyle = getRankStyle(rank, index, rankedMembers.length);
-                                return (
-                                    <tr key={index}>
-                                        <td style={rankStyle}>{rank}</td>
-                                        <td>{member.name}</td>
-                                        <td>{member.missionTotalPoint}pt</td>
-                                        <td>{penalty_per_point}원</td>
-                                        <td>{member.calculatedPoint === 0 ? '0' : (member.calculatedPoint > 0 ? `-${member.calculatedPoint}` : member.calculatedPoint)}원</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button className="modalClose"variant="secondary" onClick={() => setShowModal(false)}>
-                    닫기
-                </Button>
-                <Button className="doCalculate" variant="primary" onClick={() => handlePointCalculation(group_name, penalty_per_point)}>정산 실행</Button>
-            </Modal.Footer>
-        </Modal>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className='row'>
+                        <div className='col text-center'>
+                            <div className='tipMessage'>tip: {tipMessage}</div>
+                        </div>
+                    </div>
+                    <div className='table-responsive'>
+                        <table className='table'>
+                            <thead>
+                                <tr>
+                                    <th>등수</th>
+                                    <th>이름</th>
+                                    <th>포인트</th>
+                                    <th></th>
+                                    <th>페널티 금액</th>
+                                    <th></th>
+                                    <th>총 벌금</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rankedMembers.map((member, index) => {
+                                    if (prevPoint !== member.missionTotalPoint) {
+                                        rank += sameRankCount;
+                                        sameRankCount = 1;
+                                    } else {
+                                        sameRankCount++;
+                                    }
+                                    prevPoint = member.missionTotalPoint;
+                                    const rankStyle = getRankStyle(rank, index, rankedMembers.length);
+                                    return (
+                                        <tr key={index}>
+                                            <td style={{ width: '50px', verticalAlign: 'middle' }}><div className='tableRank' style={{ ...rankStyle, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{rank}</div></td>
+                                            <td style={{ verticalAlign: 'middle' }}>{member.name}</td>
+                                            <td style={{ verticalAlign: 'middle' }}>{member.missionTotalPoint} Point</td>
+                                            <td style={{ verticalAlign: 'middle' }}>X</td>
+                                            <td style={{ verticalAlign: 'middle' }}>{penalty_per_point}원</td>
+                                            <td style={{ verticalAlign: 'middle' }}>=</td>
+                                            <td style={{ verticalAlign: 'middle' }}>{member.calculatedPoint === 0 ? '0' : (member.calculatedPoint > 0 ? `-${member.calculatedPoint}` : member.calculatedPoint)}원</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="modalClose" variant="secondary" onClick={() => setShowModal(false)}>
+                        닫기
+                    </Button>
+                    <Button className="doCalculate" variant="primary" onClick={() => setShowConfirmModal(true)}>정산 실행</Button>
+                </Modal.Footer>
+            </Modal>
+            <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} className='calculateModal'>
+                <Modal.Header closeButton>
+                    <Modal.Title className="modalTitle">정산 확인</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className='text-center modalBody'>
+                    <p>정말 정산을 실행하시겠습니까? 되돌릴 수 없어요!</p>
+                    <img className="dreams" src="/img/dream_loading_1.gif" alt="loading" />
+                    <p>드림이는 열심히 정산중이에요...</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="modalClose" variant="secondary" onClick={() => setShowConfirmModal(false)}>
+                        아니요
+                    </Button>
+                    <Button className="doCalculate" variant="primary" onClick={() => handlePointCalculation(group_name, penalty_per_point)}>
+                        예
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showResultModal} onHide={() => setShowResultModal(false)} className='calculateModal'>
+                <Modal.Header closeButton>
+                    <Modal.Title className="modalTitle">정산 결과</Modal.Title>
+                </Modal.Header>
+                <Modal.Body  className='text-center modalBody'>
+                    {calculationResult === 'success' ? (
+                        <>
+                            <p>드림이가 정산에 성공했어요!</p>
+                            <img className="dreams" src="/img/dream_O.gif" alt="success"/>
+                        </>
+                    ) : (
+                        <>
+                            <p>드림이가 정산에 실패했어요...</p>
+                            <img className="dreams" src="/img/dream_X.gif" alt="failure"/>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="modalClose" variant="secondary" onClick={() => setShowResultModal(false)}>
+                        닫기
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 }
 
@@ -570,13 +625,13 @@ function SettingModal({ showSettingModal, setShowSettingModal, group_name, curre
             return;
         }
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateNotice.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateNotice.php', {
                 groupName: group_name,
                 newNotice: newNotice
             });
             console.log('공지사항 업뎃 성공');
 
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdatePenalty.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdatePenalty.php', {
                 groupName: group_name,
                 Penalty: newPenaltyPerPoint
             });
@@ -672,7 +727,7 @@ function ChangeProfileImage(props) {
       formData.append('imgFile', selectedFile);
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
           headers: {
             'Content-Type': 'multipart/form-data',
           }
@@ -680,6 +735,7 @@ function ChangeProfileImage(props) {
         if (res.data == true) {
           alert("프로필 사진이 변경되었습니다!");
           props.setChange(false);
+          props.fetchGroupMemberList();
         }
         else {
           console.log(res.data.error);
@@ -697,7 +753,7 @@ function ChangeProfileImage(props) {
       }
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
         if (res.data) {
           alert("프로필 사진이 제거되었습니다!");
           props.setChange(false);
@@ -729,7 +785,7 @@ function ChangeProfileImage(props) {
                     handleFileChange(event);
                     handleFileUpload(event);
                 }} id="input-file" />
-                <label for="input-file">업로드</label>
+                <label htmlFor="input-file">업로드</label>
                 <input type="text" value={fileName} placeholder='선택된 파일이 없습니다.' readOnly></input>
                 </div>
                 <button className='button-profile' onClick={handleUpload}>변경하기</button>
@@ -767,6 +823,10 @@ function UpdateGroup(props) {
         }
         setIsSelectPrice(newArr);
     }, [props.penaltyPerPoint]);
+
+    useEffect(() => {
+        setGroupNotice(props.notice)
+    }, [props.notice])
     
     useEffect(() => {
         if (!props.update) {
@@ -797,7 +857,7 @@ function UpdateGroup(props) {
         const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
         
         try {
-        const response = await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateGroup.php', {
+        const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateGroup.php', {
             groupName: groupName,
             Penalty: selectedPrice,
             newNotice: groupNotice,

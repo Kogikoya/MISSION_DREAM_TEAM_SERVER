@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button, Modal, Nav } from 'react-bootstrap';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './App.css';
 import Group from './pages/Group.js';
@@ -25,25 +25,28 @@ function App() {
   let [point, setPoint] = useState();
   let [missionInput, setMissionInput] = useState('');
   let [profileImage, setProfileImage] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
   let [tap, setTap] = useState(0);
   let navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
+    axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
     .then(res => {
       if(res.data === false){
-        navigate('/login');
+        setIsLoggedIn(false);
+      } else {
+        setIsLoggedIn(true);
       }
     })
     .catch(error => {
-      console.error('Error fetching user info:', error)
+      console.error('Error fetching user login data:', error)
     })
-  }, []);
-
+  }, [navigate]);
+  
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
         const userData = res.data;
         setUserName(userData.name);
         const missionCnt = userData.totalMissionCnt - userData.noMissionCnt
@@ -57,13 +60,15 @@ function App() {
 
     const fetchProfileImage = async () => {
       try {
-        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
+        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageShow.php');
         let originalPath = res.data.profilePath;
-        if (originalPath === '/img/default_profile.png') {
+        if (originalPath != null) {
+          if (originalPath === '/img/default_profile.png') {
             setProfileImage(originalPath);
-        } else {
+          } else {
             let trimmedPath = originalPath.replace(/^..\/project\/public/, "");
             setProfileImage(trimmedPath);
+          }
         }
       } catch (error) {
         console.log(error);
@@ -72,6 +77,12 @@ function App() {
     fetchProfileImage();
   });
   
+  if (isLoggedIn === null) {
+    return (
+      <div>Loading</div>
+    );
+  }
+
   const handleAddMission = async () => {
     try {
       if (missionInput.trim() === '') {
@@ -79,10 +90,9 @@ function App() {
         return; // 미션 입력란이 비어 있으면 함수 종료
       }
       // 새로운 미션 추가
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Insert_mission.php', {
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Insert_mission.php', {
         mission: missionInput // 미션 내용
       });
-      console.log('insert_mission',res)
     
       // 미션 목록 갱신
       // 미션 목록이 비어 있는지 확인하고 새로운 미션을 추가
@@ -99,59 +109,64 @@ function App() {
       console.error('Error adding mission:', error);
     }
   };
+  
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={
-          <div>
-            <div className="nav-bar">
-              <img className="img-logo" onClick={()=>{navigate('/')}} src="/img/dream.png"/>
-              <div className="nav-profile">
-                <img className="img-profile" onClick={()=>{ setChange(true) }} src={profileImage} alt="Profile"></img>
-                <h6>{ userName }</h6>
-                <h6>today { point }</h6>
-                <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
-                <button className="button-logout" onClick={()=>{
-                  axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
-                  .then(res => {
-                    navigate('/login')
-                  })
-                  .catch(err => {
-                    console.log(err)
-                  })
-                  }}>로그아웃</button>
-              </div>
-            </div>
-            <div className="main-top">
-              {
-                tap == 0? <>
-                  <h1>To do list</h1>
-                  <input className="input-todo" type="text" value={missionInput} onChange={(e)=>{ setMissionInput(e.target.value)}}placeholder="오늘의 할 일을 작성하세요!"></input>
-                  <button className="button-todo-plus" onClick={handleAddMission}>+</button>
-                </> :
-                <>
-                <h1>Calendar</h1>
-                <h5 className="top-calendar-text">할 건 다하고 노는거니?</h5>
-                </>
-              }
-              <Nav variant="tabs" defaultActiveKey="todo" className="tap">
-                <Nav.Item>
-                  <Nav.Link onClick={()=>{ setTap(0) }} eventKey="todo">to do</Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link onClick={()=>{ setTap(1) }} eventKey="calendar">calendar</Nav.Link>
-                </Nav.Item>
-              </Nav>
-            </div>
-            {
-              tap == 0 ? <ToDo setCreate={setCreate} setJoin={setJoin} groupList={groupList} missionList={missionList} setMissionList={setMissionList} setGroupList={setGroupList} navigate={navigate}/> : null
-            }
-            {
-              tap == 1 ? <MyCalendar/> : null
-            }
-          </div>
-        }/>
         <Route path="/login" element={ <LogIn navigate={navigate}/> }/>
+        {isLoggedIn ? (
+          <Route path="/" element={
+            <div>
+              <div className="nav-bar">
+                <img className="img-logo" onClick={()=>{navigate('/')}} src="/img/dream.png"/>
+                <div className="nav-profile">
+                  <img className="img-profile" onClick={()=>{ setChange(true) }} src={profileImage} alt="Profile"></img>
+                  <h6>{ userName }</h6>
+                  <h6>today { point }</h6>
+                  <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
+                  <button className="button-logout" onClick={()=>{
+                    axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
+                    .then(res => {
+                      navigate('/login')
+                    })
+                    .catch(err => {
+                      console.log(err)
+                    })
+                    }}>로그아웃</button>
+                </div>
+              </div>
+              <div className="main-top">
+                {
+                  tap == 0? <>
+                    <h1>To do list</h1>
+                    <input className="input-todo" type="text" value={missionInput} onChange={(e)=>{ setMissionInput(e.target.value)}}placeholder="오늘의 할 일을 작성하세요!"></input>
+                    <button className="button-todo-plus" onClick={handleAddMission}>+</button>
+                  </> :
+                  <>
+                  <h1>Calendar</h1>
+                  <h5 className="top-calendar-text">할 건 다하고 노는거니?</h5>
+                  </>
+                }
+                <Nav variant="tabs" defaultActiveKey="todo" className="tap">
+                  <Nav.Item>
+                    <Nav.Link onClick={()=>{ setTap(0) }} eventKey="todo">to do</Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link onClick={()=>{ setTap(1) }} eventKey="calendar">calendar</Nav.Link>
+                  </Nav.Item>
+                </Nav>
+              </div>
+              {
+                tap == 0 ? <ToDo setCreate={setCreate} setJoin={setJoin} groupList={groupList} missionList={missionList} setMissionList={setMissionList} setGroupList={setGroupList} navigate={navigate}/> : null
+              }
+              {
+                tap == 1 ? <MyCalendar/> : null
+              }
+            </div>
+          }/>
+        ) : (
+          <Route path="*" element={<Navigate to="/login" />} />
+        )}
         <Route path="/signup" element={ <SignUp/> }/>
         <Route path="/group/*" element={ <Group/> }/>
         <Route path="/updateinfo" element={ <UpdateInfo/> }/>
@@ -167,7 +182,7 @@ function App() {
 
 const fetchMissions = async (setMissionList) => {
   try {
-    const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/Show_mission.php?`)
+    const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/Show_mission.php?`)
     if (res.data == null) {
       setMissionList([]);
     } else {
@@ -184,7 +199,7 @@ const fetchMissions = async (setMissionList) => {
 
 const fetchGroups = async (setGroupList) => {
   try {
-      const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/ShowGroup.php?`)
+      const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroup.php?`)
       setGroupList(res.data)
   } catch (error) {
       console.error('Error fetching missions:', error)
@@ -209,7 +224,7 @@ function ToDo(props) {
 
     if (currentHour >= 5 && currentHour < 21) {
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Delete_mission.php', {
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Delete_mission.php', {
           mission_idx: props.missionList[i][0]
         })
         fetchMissions(props.setMissionList);
@@ -231,16 +246,17 @@ function ToDo(props) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/MissionImageUpload.php', formData, {
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/MissionImageUpload.php', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Image uploaded:', res.data);
-      if (res.data == true) {
+
+      if (res.data) {
         props.setMissionList(prevMissions => {
           const newMissions = [...prevMissions];
           newMissions[index].isCompleted = true;
+          newMissions[index][3] = res.data;
           return newMissions;
         });
       }
@@ -250,7 +266,8 @@ function ToDo(props) {
     }
   };
 
-  const handlePhotoOpen = (photoPath, missionName) => {
+  const handlePhotoOpen = async (photoPath, missionName) => {
+    console.log(photoPath, missionName)
     let absolutePath = photoPath.replace('../project/public/', '');
     absolutePath = absolutePath.replace('..', '');
     setPhotoSrc(`/${absolutePath}`);
@@ -356,7 +373,7 @@ function MyCalendar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetPersonalRecord.php');
+        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetPersonalRecord.php');
         if (res.data) {
           const formattedData = res.data.map(entry => ({
             date: entry.date.split(' ')[0],
@@ -523,7 +540,7 @@ function CreateGroup(props) {
     const checkGroupName = async () => {
       if (groupName) {
         try {
-          const response = await axios.post('http://www.missiondreamteam.kro.kr/api/GroupNameCheck.php', { groupName });
+          const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/GroupNameCheck.php', { groupName });
           setIsGroupNameUnique(response.data);
         } catch (error) {
           console.log(error);
@@ -562,7 +579,7 @@ function CreateGroup(props) {
     const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
 
     try {
-      const response = await axios.post('http://www.missiondreamteam.kro.kr/api/CreateGroup.php', {
+      const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/CreateGroup.php', {
         group_name: groupName,
         penaltyPerPoint: selectedPrice,
         group_notice: groupNotice,
@@ -662,7 +679,7 @@ function JoinGroup(props) {
         const inputName = document.getElementById('name').value;
         const inputPw = document.getElementById('password').value;
   
-        axios.post('http://www.missiondreamteam.kro.kr/api/EnterGroup.php',
+        axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/EnterGroup.php',
         {
             group_name: inputName,
             group_password: inputPw
@@ -735,7 +752,7 @@ function ChangeProfileImage(props) {
     formData.append('imgFile', selectedFile);
 
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
         headers: {
           'Content-Type': 'multipart/form-data',
         }
@@ -760,7 +777,7 @@ function ChangeProfileImage(props) {
     }
 
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
       if (res.data) {
         alert("프로필 사진이 제거되었습니다!");
         props.setChange(false);
@@ -792,7 +809,7 @@ function ChangeProfileImage(props) {
                   handleFileChange(event);
                   handleFileUpload(event);
               }} id="input-file" />
-              <label for="input-file">업로드</label>
+              <label htmlFor="input-file">업로드</label>
               <input type="text" value={fileName} placeholder='선택된 파일이 없습니다.' readOnly></input>
               </div>
               <button className='button-profile' onClick={handleUpload}>변경하기</button>

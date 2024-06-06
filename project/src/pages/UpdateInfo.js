@@ -31,11 +31,11 @@ const UpdateInfoForm = () => {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const userRes = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+                const userRes = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
                 const userInfo = userRes.data;
                 setUserName(userInfo.name);
                 setFormData(prevData => ({ ...prevData, nickName: userInfo.name }));
-                const idRes = await axios.get('http://www.missiondreamteam.kro.kr/api/GetId.php');
+                const idRes = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetId.php');
                 const userId = idRes.data;
                 setFormData(prevData => ({ ...prevData, id: userId }));
                 setIsNameDuplicateChecked(true);
@@ -107,7 +107,7 @@ const UpdateInfoForm = () => {
         const nameValidationResult = formData.nickName && formData.nickName.match(/^(?=.*[a-zA-Z가-힣]).{2,10}$/);
         if (nameValidationResult) {
             try {
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/NickNameCheck.php', {
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/NickNameCheck.php', {
                     nickName: formData.nickName
                 });
                 console.log(res.data);
@@ -140,7 +140,7 @@ const UpdateInfoForm = () => {
                 // 새 비밀번호가 비어있는 경우 null을 전달하고, 그렇지 않은 경우 실제 값을 전달
                 const newPasswordToSend = formData.newPassword === '' ? null : formData.newPassword;
     
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateInfo.php', {
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateInfo.php', {
                     newName: formData.nickName,
                     CurPassword: formData.CurPassword,
                     newPassword: newPasswordToSend
@@ -166,7 +166,7 @@ const UpdateInfoForm = () => {
     useEffect(() => {
         const checkLoginState = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php');
                 console.log('로그인 상태 : ', res);
                 if (res.data === 'true') {
                     setIsLoggedIN(true);
@@ -180,7 +180,7 @@ const UpdateInfoForm = () => {
 
         const fetchUserInfo = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
                 const userData = res.data;
                 setUserName(userData.name);  // userName 상태 업데이트
                 setFormData(prevData => ({ ...prevData, nickName: userData.name }));  // formData에 nickName 초기화
@@ -199,7 +199,7 @@ const UpdateInfoForm = () => {
         const confirmed = window.confirm("탈퇴하면 머리카락 3가닥 빠져요");
         if (confirmed) {
             try {
-                await axios.post('http://www.missiondreamteam.kro.kr/api/ExitMember.php');
+                await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ExitMember.php');
                 alert("잘가요");
                 // 로그인창으로 이동
                 navigate('/login')
