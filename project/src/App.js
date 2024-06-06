@@ -30,7 +30,7 @@ function App() {
   let navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
+    axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
     .then(res => {
       if(res.data === false){
         setIsLoggedIn(false);
@@ -46,7 +46,7 @@ function App() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
+        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
         const userData = res.data;
         setUserName(userData.name);
         const missionCnt = userData.totalMissionCnt - userData.noMissionCnt
@@ -60,7 +60,7 @@ function App() {
 
     const fetchProfileImage = async () => {
       try {
-        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageShow.php');
+        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
         let originalPath = res.data.profilePath;
         if (originalPath != null) {
           if (originalPath === '/img/default_profile.png') {
@@ -90,7 +90,7 @@ function App() {
         return; // 미션 입력란이 비어 있으면 함수 종료
       }
       // 새로운 미션 추가
-      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Insert_mission.php', {
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Insert_mission.php', {
         mission: missionInput // 미션 내용
       });
     
@@ -125,7 +125,7 @@ function App() {
                   <h6>today { point }</h6>
                   <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
                   <button className="button-logout" onClick={()=>{
-                    axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
+                    axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
                     .then(res => {
                       navigate('/login')
                     })
@@ -182,7 +182,7 @@ function App() {
 
 const fetchMissions = async (setMissionList) => {
   try {
-    const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/Show_mission.php?`)
+    const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/Show_mission.php?`)
     if (res.data == null) {
       setMissionList([]);
     } else {
@@ -199,7 +199,7 @@ const fetchMissions = async (setMissionList) => {
 
 const fetchGroups = async (setGroupList) => {
   try {
-      const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroup.php?`)
+      const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/ShowGroup.php?`)
       setGroupList(res.data)
   } catch (error) {
       console.error('Error fetching missions:', error)
@@ -224,7 +224,7 @@ function ToDo(props) {
 
     if (currentHour >= 5 && currentHour < 21) {
       try {
-        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Delete_mission.php', {
+        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Delete_mission.php', {
           mission_idx: props.missionList[i][0]
         })
         fetchMissions(props.setMissionList);
@@ -246,7 +246,7 @@ function ToDo(props) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
     try {
-      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/MissionImageUpload.php', formData, {
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/MissionImageUpload.php', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -373,7 +373,7 @@ function MyCalendar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetPersonalRecord.php');
+        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetPersonalRecord.php');
         if (res.data) {
           const formattedData = res.data.map(entry => ({
             date: entry.date.split(' ')[0],
@@ -540,7 +540,7 @@ function CreateGroup(props) {
     const checkGroupName = async () => {
       if (groupName) {
         try {
-          const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/GroupNameCheck.php', { groupName });
+          const response = await axios.post('http://www.missiondreamteam.kro.kr/api/GroupNameCheck.php', { groupName });
           setIsGroupNameUnique(response.data);
         } catch (error) {
           console.log(error);
@@ -579,7 +579,7 @@ function CreateGroup(props) {
     const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
 
     try {
-      const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/CreateGroup.php', {
+      const response = await axios.post('http://www.missiondreamteam.kro.kr/api/CreateGroup.php', {
         group_name: groupName,
         penaltyPerPoint: selectedPrice,
         group_notice: groupNotice,
@@ -679,7 +679,7 @@ function JoinGroup(props) {
         const inputName = document.getElementById('name').value;
         const inputPw = document.getElementById('password').value;
   
-        axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/EnterGroup.php',
+        axios.post('http://www.missiondreamteam.kro.kr/api/EnterGroup.php',
         {
             group_name: inputName,
             group_password: inputPw
@@ -752,7 +752,7 @@ function ChangeProfileImage(props) {
     formData.append('imgFile', selectedFile);
 
     try {
-      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
         headers: {
           'Content-Type': 'multipart/form-data',
         }
@@ -777,7 +777,7 @@ function ChangeProfileImage(props) {
     }
 
     try {
-      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
+      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
       if (res.data) {
         alert("프로필 사진이 제거되었습니다!");
         props.setChange(false);
