@@ -47,7 +47,7 @@ function GroupPage(props) {
     useEffect(() => {
         const checkLoginState = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php');
                 if (res.data === 'true') {
                     setIsLoggedIN(true);
                 } else {
@@ -60,7 +60,7 @@ function GroupPage(props) {
 
         const fetchUserInfo = async () => {
             try {
-                const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+                const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
                 const userData = res.data;
                 setUserName(userData.name);
                 const missionCnt = userData.totalMissionCnt - userData.noMissionCnt;
@@ -73,7 +73,7 @@ function GroupPage(props) {
 
         const fetchProfileImage = async () => {
             try {
-              const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
+              const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageShow.php');
               let originalPath = res.data.profilePath;
               if (originalPath === '/img/default_profile.png') {
                   setProfileImage(originalPath);
@@ -92,7 +92,7 @@ function GroupPage(props) {
 
     const fetchPenaltyPerPoint = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowPenalty.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowPenalty.php', { groupName: group_name });
             const bringpenaltyPerPoint = res.data; // 벌점 당 포인트 가져 오기
             setPenaltyPerPoint(bringpenaltyPerPoint); // 상태에 벌점 당 포인트 설정
         } catch (error) {
@@ -105,7 +105,7 @@ function GroupPage(props) {
 
     const fetchNotice = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowNotice.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowNotice.php', { groupName: group_name });
             const noticeData = res.data; // 공지 가져오기
             setNotice(noticeData); // 가져온 공지를 상태에 설정
         } catch (error) {
@@ -116,19 +116,19 @@ function GroupPage(props) {
         fetchNotice();
     }, [group_name]);
 
-    const fetchGroupMemberList = async () => {
-        try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberInfo.php', { groupName: group_name });
-            setMembers(res.data);
-        } catch (error) {
-            console.error('그룹멤버 실패', error);
-        }
-    };
-    
-    useEffect(() => {
+        const fetchGroupMemberList = async () => {
+            try {
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberInfo.php', { groupName: group_name });
+                setMembers(res.data);
+            } catch (error) {
+                console.error('그룹멤버 실패', error);
+            }
+        };
+
+        useEffect(() => {
         const fetchGroupMemberOverall = async () => {
             try {
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberPoint.php', { groupName: group_name });
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberPoint.php', { groupName: group_name });
                 const pointsByDate = {};
                 res.data.forEach(member => {
                     const memberId = member.id;
@@ -165,7 +165,7 @@ function GroupPage(props) {
         const confirmed = window.confirm("진짜 탈퇴할거에요?진짜?ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ가지마세용");
         if (confirmed) {
             try {
-                await axios.post('http://www.missiondreamteam.kro.kr/api/ExitGroup.php', { groupName: group_name });
+                await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ExitGroup.php', { groupName: group_name });
                 alert("탈퇴 성공..... 메인페이지로 이동할게요....");
                 // 메인 페이지로 이동
                 navigate('/');
@@ -245,7 +245,7 @@ function GroupPage(props) {
                             <h6>today { point }</h6>
                             <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
                             <button className="button-logout" onClick={()=>{
-                            axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
+                            axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
                             .then(res => {
                                 navigate('/login')
                             })
@@ -457,8 +457,10 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [calculationResult, setCalculationResult] = useState(null);
-
-    const tipMessage = "꼴찌가 1등에게 벌금을 몰아주세요!";
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [tipMessage, setTipMessage] = useState('');
+    const [prevN, setPrevN] = useState(null);
+    const [prevM, setPrevM] = useState(null);
 
     const parsedMembers = members.map((member) => JSON.parse(member));
     const rankedMembers = parsedMembers
@@ -474,11 +476,11 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
         });
 
     const getRankStyle = (rank, index, totalMembers) => {
-        if (rank === 1) return { backgroundColor: 'gold', color: 'white', textAlign: 'center' };
-        if (rank === 2) return { backgroundColor: 'silver', color: 'white', textAlign: 'center' };
-        if (rank === 3) return { backgroundColor: '#CD7F32', color: 'white', textAlign: 'center' };
-        if (index === totalMembers - 1) return { backgroundColor: 'red', color: 'white', textAlign: 'center' };
-        return { backgroundColor: '#87F6A6', color: 'white', textAlign: 'center' };
+        if (rank === 1) return { backgroundColor: '#FAF29F', textAlign: 'center' };
+        if (rank === 2) return { backgroundColor: '#DBDBDB', textAlign: 'center' };
+        if (rank === 3) return { backgroundColor: '#FADB9F', textAlign: 'center' };
+        if (index === totalMembers - 1) return { backgroundColor: '#FFD0D0', textAlign: 'center' };
+        return { backgroundColor: '#EAFFF4', textAlign: 'center' };
     };
 
     const handlePointCalculation = async (group_name, penalty_per_point) => {
@@ -486,7 +488,7 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
         setShowConfirmModal(false);
 
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/Do_cost_settlement.php', { group_name: group_name });
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Do_cost_settlement.php', { group_name: group_name });
             setCalculationResult('success');
         } catch (err) {
             setCalculationResult('failure');
@@ -496,7 +498,62 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
         }
     };
 
-    const [showResultModal, setShowResultModal] = useState(false);
+    const generateTipMessage = () => {
+        const tips = [
+            "{m}등의 벌금을 {n}등에게 몰아주세요!",
+            "{n}등과 {m}등의 벌금을 바꿔보세요!",
+            "{n}등은 벌금 면제!",
+            "벌금 전체를 모아 회식 갑시다!",
+        ];
+        
+        const getValidRanks = () => {
+            const ranks = [];
+            let currentRank = 1;
+            let currentPoint = rankedMembers[0]?.missionTotalPoint;
+            rankedMembers.forEach(member => {
+                if (currentPoint !== member.missionTotalPoint) {
+                    currentRank += ranks.filter(rank => rank === currentRank).length;
+                }
+                ranks.push(currentRank);
+                currentPoint = member.missionTotalPoint;
+            });
+            
+            // 모든 멤버의 등수가 동일한 경우
+            if (ranks.every(rank => rank === ranks[0])) {
+                return [];
+            }
+
+            return ranks;
+        };
+
+        const validRanks = getValidRanks();
+        if (validRanks.length === 0) {
+            return "제작자에게 메로나 사주세요!";
+        }
+        const getRandomRank = () => validRanks[Math.floor(Math.random() * validRanks.length)];
+        
+        let n = getRandomRank();
+        let m = getRandomRank();
+
+        // n이랑 m같으면 다시
+        while (n === m) {
+            n = getRandomRank();
+            m = getRandomRank();
+        }
+
+        setPrevN(n);
+        setPrevM(m);
+
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+
+        return randomTip.replace('{n}', n).replace('{m}', m);
+    };
+
+    useEffect(() => {
+        if (showModal) {
+            setTipMessage(generateTipMessage());
+        }
+    }, [showModal]);
 
     return (
         <>
@@ -542,7 +599,7 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
                                         <tr key={index}>
                                             <td style={{ width: '50px', verticalAlign: 'middle' }}><div className='tableRank' style={{ ...rankStyle, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{rank}</div></td>
                                             <td style={{ verticalAlign: 'middle' }}>{member.name}</td>
-                                            <td style={{ verticalAlign: 'middle' }}>{member.missionTotalPoint} Point</td>
+                                            <td style={{ verticalAlign: 'middle' }}>- {member.missionTotalPoint} Point</td>
                                             <td style={{ verticalAlign: 'middle' }}>X</td>
                                             <td style={{ verticalAlign: 'middle' }}>{penalty_per_point}원</td>
                                             <td style={{ verticalAlign: 'middle' }}>=</td>
@@ -625,13 +682,13 @@ function SettingModal({ showSettingModal, setShowSettingModal, group_name, curre
             return;
         }
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateNotice.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateNotice.php', {
                 groupName: group_name,
                 newNotice: newNotice
             });
             console.log('공지사항 업뎃 성공');
 
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdatePenalty.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdatePenalty.php', {
                 groupName: group_name,
                 Penalty: newPenaltyPerPoint
             });
@@ -727,7 +784,7 @@ function ChangeProfileImage(props) {
       formData.append('imgFile', selectedFile);
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
           headers: {
             'Content-Type': 'multipart/form-data',
           }
@@ -753,7 +810,7 @@ function ChangeProfileImage(props) {
       }
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
         if (res.data) {
           alert("프로필 사진이 제거되었습니다!");
           props.setChange(false);
@@ -826,8 +883,8 @@ function UpdateGroup(props) {
 
     useEffect(() => {
         setGroupNotice(props.notice)
-    }, [props.notice])
-    
+    }, [props.notice])    
+
     useEffect(() => {
         if (!props.update) {
         setGroupName(props.group_name);
@@ -857,7 +914,7 @@ function UpdateGroup(props) {
         const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
         
         try {
-        const response = await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateGroup.php', {
+        const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateGroup.php', {
             groupName: groupName,
             Penalty: selectedPrice,
             newNotice: groupNotice,
