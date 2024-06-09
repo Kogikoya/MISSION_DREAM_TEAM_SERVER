@@ -52,7 +52,6 @@ try{
     exit;
 }
 
-
 // Prepare the SQL statement
 $sql = "DELETE FROM missions WHERE id = ? AND mission_idx = ?";
 

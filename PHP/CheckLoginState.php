@@ -6,7 +6,7 @@ if(!session_id()){
     session_start();
 }
 
-header("Refresh:0");
+// header("Refresh:0");
 
 // $_COOKIE['c_id'] = isset($_COOKIE['c_id']) ? $_COOKIE['c_id'] : null;
 
