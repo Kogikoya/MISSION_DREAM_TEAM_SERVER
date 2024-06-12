@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Row, Col, Modal } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Button, Col, Form, Modal, Row } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import './UpdateInfo.css';
 
 const useFormState = () => {
@@ -48,11 +48,11 @@ const useFormState = () => {
 
 const fetchUserInfo = async (setUserName, setFormData, setIsNameDuplicateChecked) => {
     try {
-        const userRes = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+        const userRes = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
         const userInfo = userRes.data;
         setUserName(userInfo.name);
         setFormData(prevData => ({ ...prevData, nickName: userInfo.name }));
-        const idRes = await axios.get('http://www.missiondreamteam.kro.kr/api/GetId.php');
+        const idRes = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetId.php');
         const userId = idRes.data;
         setFormData(prevData => ({ ...prevData, id: userId }));
         setIsNameDuplicateChecked(true);
@@ -119,7 +119,7 @@ const handleCheckDuplicateNickName = async (formData, userName, setIsNameDuplica
     const nameValidationResult = formData.nickName && formData.nickName.match(/^(?=.*[a-zA-Z가-힣]).{2,10}$/);
     if (nameValidationResult) {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/NickNameCheck.php', {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/NickNameCheck.php', {
                 nickName: formData.nickName
             });
             console.log(res.data);
@@ -159,7 +159,7 @@ const handleSubmit = async (e, formData, formIsValid, setFormIsValid, navigate, 
         try {
             const newPasswordToSend = formData.newPassword === '' ? null : formData.newPassword;
 
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateInfo.php', {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateInfo.php', {
                 newName: formData.nickName,
                 CurPassword: formData.CurPassword,
                 newPassword: newPasswordToSend
@@ -188,7 +188,7 @@ const handleSubmit = async (e, formData, formIsValid, setFormIsValid, navigate, 
 
 const checkLoginState = async (setIsLoggedIN) => {
     try {
-        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php');
+        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php');
         console.log('로그인 상태 : ', res);
         if (res.data === 'true') {
             setIsLoggedIN(true);
@@ -206,7 +206,7 @@ const handleMemberExit = async (setShowConfirmModal) => {
 
 const confirmMemberExit = async (navigate, setShowModal, setModalContent, setModalImage) => {
     try {
-        await axios.post('http://www.missiondreamteam.kro.kr/api/ExitMember.php');
+        await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ExitMember.php');
         setModalContent('회원탈퇴가 완료되었어요. 잘가요!');
         setModalImage('/img/dream_O.gif'); // 탈퇴 성공 시 이미지 변경
         setShowModal(true);

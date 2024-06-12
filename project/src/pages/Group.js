@@ -5,12 +5,13 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import 'react-calendar/dist/Calendar.css';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import './Group.css';
 
 axios.defaults.withCredentials = true;
 
 function GroupPage(props) {
-    let { userName, profileImage, point } = props;  // Point를 받아옴
+    let {userName, point, profileImage, fetchProfileImage} = props // Point를 받아옴
     let [currentWeekStart, setCurrentWeekStart] = useState(new Date());
     let [showModal, setShowModal] = useState(false);
     let navigate = useNavigate();
@@ -40,7 +41,7 @@ function GroupPage(props) {
 
     const fetchPenaltyPerPoint = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowPenalty.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowPenalty.php', { groupName: group_name });
             const bringpenaltyPerPoint = res.data; // 벌점 당 포인트 가져 오기
             setPenaltyPerPoint(bringpenaltyPerPoint); // 상태에 벌점 당 포인트 설정
         } catch (error) {
@@ -53,7 +54,7 @@ function GroupPage(props) {
 
     const fetchNotice = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowNotice.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowNotice.php', { groupName: group_name });
             const noticeData = res.data; // 공지 가져오기
             setNotice(noticeData); // 가져온 공지를 상태에 설정
         } catch (error) {
@@ -66,7 +67,7 @@ function GroupPage(props) {
 
     const fetchGroupMemberList = async () => {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberInfo.php', { groupName: group_name });
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberInfo.php', { groupName: group_name });
             setMembers(res.data);
         } catch (error) {
             console.error('그룹멤버 실패', error);
@@ -76,7 +77,7 @@ function GroupPage(props) {
     useEffect(() => {
         const fetchGroupMemberOverall = async () => {
             try {
-                const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ShowGroupMemberPoint.php', { groupName: group_name });
+                const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroupMemberPoint.php', { groupName: group_name });
                 const pointsByDate = {};
                 res.data.forEach(member => {
                     const memberId = member.id;
@@ -193,6 +194,7 @@ function GroupPage(props) {
                             handleFrontOfWeekClick={handleFrontOfWeekClick}
                             setCurrentWeekStart={setCurrentWeekStart}
                             calculateColorByRank={calculateColorByRank}
+                            setUpdate={setUpdate}
                         />
                     </div>
                 } />
@@ -229,6 +231,7 @@ function GroupPage(props) {
                 change={change}
                 setChange={setChange}
                 profileImage={profileImage}
+                fetchProfileImage = {fetchProfileImage}
                 fetchGroupMemberList={fetchGroupMemberList}
             />
             <GroupExitModal
@@ -252,7 +255,7 @@ function NavBar({ userName, profileImage, Point, setChange, navigate }) {
                 <h6>today {Point}</h6>
                 <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png" />
                 <button className="button-logout" onClick={() => {
-                    axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
+                    axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
                         .then(res => {
                             navigate('/login');
                         })
@@ -358,11 +361,11 @@ function MemberList({ members, memberMissionTables, toggleMissionTable, handlePh
     );
 }
 
-function GroupCalendar({ group_name, penaltyPerPoint, notice, isNoticeExpanded, toggleNoticeExpansion, startOfWeek, endOfWeek, daysOfWeek, datesOfWeek, members, membersOverall, handleBackOfWeekClick, handleFrontOfWeekClick, setCurrentWeekStart, calculateColorByRank }) {
+function GroupCalendar({ group_name, penaltyPerPoint, notice, isNoticeExpanded, toggleNoticeExpansion, startOfWeek, endOfWeek, daysOfWeek, datesOfWeek, members, membersOverall, handleBackOfWeekClick, handleFrontOfWeekClick, setCurrentWeekStart, calculateColorByRank, setUpdate }) {
     return (
         <div className="groupCalendar-container">
             <div className="groupCalendar">
-                <GroupInfo group_name={group_name} penaltyPerPoint={penaltyPerPoint} />
+                <GroupInfo group_name={group_name} penaltyPerPoint={penaltyPerPoint} setUpdate={setUpdate} />
                 <div className="groupNotice" onClick={toggleNoticeExpansion}>
                     <div className='noticeMent'>공지</div>
                     <span className="Notice" dangerouslySetInnerHTML={{ __html: isNoticeExpanded ? notice.replace(/\n/g, "<br>") : notice.slice(0, 100) }}></span>
@@ -491,7 +494,8 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
         setShowConfirmModal(false);
 
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/Do_cost_settlement.php', { group_name: group_name });
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Do_cost_settlement.php', { group_name: group_name });
+            createExcelFile(rankedMembers, group_name, penalty_per_point);
             setCalculationResult('success');
         } catch (err) {
             setCalculationResult('failure');
@@ -551,6 +555,27 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
 
         return randomTip.replace('{n}', n).replace('{m}', m);
     };
+
+    const createExcelFile = (rankedMembers, group_name, penalty_per_point) => {
+        const worksheetData = rankedMembers.map((member, index) => ({
+            '등수': index + 1,
+            '이름': member.name,
+            '포인트': member.missionTotalPoint,
+            '페널티 금액': penalty_per_point,
+            '총 벌금': member.calculatedPoint,
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, '정산 결과');
+
+        const date = new Date();
+        const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    
+
+        console.log(group_name)
+        const fileName = `정산결과_${group_name}_${formattedDate}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+    }
 
     useEffect(() => {
         if (showModal) {
@@ -658,7 +683,11 @@ function PointModal({ showModal, setShowModal, members, penalty_per_point, group
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button className="modalClose" variant="secondary" onClick={() => setShowResultModal(false)}>
+                    <Button className="modalClose" variant="secondary" onClick={() => {
+
+                        setShowResultModal(false)
+                        setShowModal(false)
+                    }}>
                         닫기
                     </Button>
                 </Modal.Footer>
@@ -685,13 +714,13 @@ function SettingModal({ showSettingModal, setShowSettingModal, group_name, curre
             return;
         }
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateNotice.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateNotice.php', {
                 groupName: group_name,
                 newNotice: newNotice
             });
             console.log('공지사항 업뎃 성공');
 
-            await axios.post('http://www.missiondreamteam.kro.kr/api/UpdatePenalty.php', {
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdatePenalty.php', {
                 groupName: group_name,
                 Penalty: newPenaltyPerPoint
             });
@@ -774,6 +803,7 @@ function ChangeProfileImage(props) {
     useEffect(() => {
       if (!props.change) {
         setIsEditing(false);
+        setFileName('');
       }
     }, [props.change]);
   
@@ -792,13 +822,14 @@ function ChangeProfileImage(props) {
       formData.append('imgFile', selectedFile);
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
           headers: {
             'Content-Type': 'multipart/form-data',
           }
         });
         if (res.data == true) {
           alert("프로필 사진이 변경되었습니다!");
+          props.fetchProfileImage();
           props.setChange(false);
           props.fetchGroupMemberList();
         }
@@ -818,9 +849,10 @@ function ChangeProfileImage(props) {
       }
   
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
         if (res.data) {
           alert("프로필 사진이 제거되었습니다!");
+          props.fetchProfileImage();
           props.setChange(false);
         } else {
           console.log(res.data.error);
@@ -922,7 +954,7 @@ function UpdateGroup(props) {
         const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
         
         try {
-        const response = await axios.post('http://www.missiondreamteam.kro.kr/api/UpdateGroup.php', {
+        const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/UpdateGroup.php', {
             groupName: groupName,
             Penalty: selectedPrice,
             newNotice: groupNotice,
@@ -1020,7 +1052,7 @@ function GroupExitModal({ showExitModal, setShowExitModal, group_name, exitCallb
 
     const handleGroupExit = async () => {
         try {
-            await axios.post('http://www.missiondreamteam.kro.kr/api/ExitGroup.php', { groupName: group_name });
+            await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ExitGroup.php', { groupName: group_name });
             // 탈퇴 성공 시
             setCalculationResult('success'); // 탈퇴 성공 상태 설정
         } catch (err) {
