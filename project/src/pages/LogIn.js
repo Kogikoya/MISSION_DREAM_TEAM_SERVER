@@ -11,9 +11,10 @@ function LogIn(props) {
     const [userCount, setUserCount] = useState(0);
     const dispatch = useDispatch();
     const userId = useSelector((state) => state.user.userId)
+    const [showRightPanel, setShowRightPanel] = useState(false);
 
     useEffect(() => {
-        axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
+        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
         .then(res => {
         if(res.data === true){
             navigate('/');
@@ -23,7 +24,7 @@ function LogIn(props) {
         console.error('Error fetching user info:', error)
         })
 
-        axios.get('http://www.missiondreamteam.kro.kr/api/UserCnt.php')
+        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/UserCnt.php')
         .then(res => {
             setUserCount(res.data);
         })
@@ -53,7 +54,7 @@ function LogIn(props) {
             const inputPw = document.getElementById('password').value;
             const keepLogIn = document.getElementById('keepLogIn').checked;
     
-            axios.post('http://www.missiondreamteam.kro.kr/api/LogIn.php',
+            axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogIn.php',
             {
                 id: inputId,
                 password: inputPw,
@@ -87,12 +88,14 @@ function LogIn(props) {
 
     return (
         <div className="Login">
-            <div className="login-box">
+            <div className={`login-box ${showRightPanel ? 'show-right-panel' : ''}`}>
                 <div className="login-left">
                     <h1 className='text-title text-today'>오늘의 갓생러는 {userCount}명!</h1>
                     <h3 className='text-title'>로그인으로 미션을 Unlock -☆</h3>
-                    <div className='text-today-box'>오늘의 미션은 무엇일까요?</div>
-                    <img className="img-cursor" src="/img/cursor.png"></img>
+                    <div>
+                        <button className='text-today-box' onClick={() => setShowRightPanel(!showRightPanel)}>오늘의 미션은 무엇일까요? <span>click!</span></button>
+                        <img className="img-cursor" src="/img/cursor.png"></img>
+                    </div>
                 </div>
                 <div className="login-right">
                     <div className='login-logo'>
