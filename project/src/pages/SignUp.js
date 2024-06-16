@@ -54,7 +54,7 @@ const SignUpForm = () => {
     }, [formData, isIDDuplicateChecked, isNameDuplicateChecked]);
 
     useEffect(() => {
-        axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
+        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
         .then(res => {
         if(res.data === true){
             navigate('/');
@@ -64,7 +64,26 @@ const SignUpForm = () => {
         console.error('Error fetching user info:', error)
         })
     }, [])
+
+    useEffect(() => {
+        const handleKeyPress = (event) => {
+            if (event.key === 'Enter') {
+                if (modalContent === '회원가입에 성공했어요!! 환영합니다!!') {
+                    setShowModal(false);
+                    window.removeEventListener('keydown', handleKeyPress); // 엔터키 이벤트 리스너 제거
+                    setTimeout(() => navigate('/login'), 0); // 로그인 페이지로 이동
+                } else {
+                    setShowModal(false);
+                }
+            }
+        };
     
+        window.addEventListener('keydown', handleKeyPress);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [setShowModal, modalContent, navigate]);
+
     return (
         <div className="background">
             <div className="input">
@@ -136,7 +155,6 @@ const SignUpForm = () => {
     );
 };
 
-
 const handleChange = (e, setFormData, validateField, setIsIDDuplicateChecked, setIsNameDuplicateChecked) => {
     const { name, value } = e.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
@@ -149,7 +167,6 @@ const handleChange = (e, setFormData, validateField, setIsIDDuplicateChecked, se
         setIsNameDuplicateChecked(false);
     }
 };
-
 
 const validateField = (fieldName, value, formData, formErrors, setFormErrors, validateForm) => {
     const errors = { ...formErrors };
@@ -186,7 +203,7 @@ const handleCheckDuplicateID = async (formData, setModalContent, setShowModal, s
     const idValidationResult = formData.id.match(/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/);
     if (idValidationResult) {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/IdCheck.php', {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/IdCheck.php', {
                 id: formData.id
             });
             console.log(res.data);
@@ -213,12 +230,11 @@ const handleCheckDuplicateID = async (formData, setModalContent, setShowModal, s
     }
 };
 
-
 const handleCheckDuplicateNickName = async (formData, setModalContent, setShowModal, setIsNameDuplicateChecked, setModalImage) => {
     const nameValidationResult = formData.nickName.match(/^(?=.*[a-zA-Z가-힣]).{2,10}$/);
     if (nameValidationResult) {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/NickNameCheck.php', {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/NickNameCheck.php', {
                 nickName: formData.nickName 
             });
             console.log(res.data);
@@ -248,7 +264,6 @@ const handleCheckDuplicateNickName = async (formData, setModalContent, setShowMo
     }
 };
 
-
 const handleCloseModal = (modalContent, setShowModal, navigate) => {
     if (modalContent === '회원가입에 성공했어요!! 환영합니다!!') {
         setShowModal(false);
@@ -267,7 +282,7 @@ const handleSubmit = async (e, formData, setModalContent, setModalImage, setShow
 
     if (isValid) {
         try {
-            const res = await axios.post('http://www.missiondreamteam.kro.kr/api/SignUp.php', {
+            const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/SignUp.php', {
                 id: formData.id,
                 password: formData.password,
                 name: formData.nickName  
@@ -291,7 +306,5 @@ const handleSubmit = async (e, formData, setModalContent, setModalImage, setShow
         console.log('Form is invalid, cannot submit.');
     }
 };
-
-
 
 export default SignUpForm;

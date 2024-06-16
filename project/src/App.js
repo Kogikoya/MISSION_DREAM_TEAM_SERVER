@@ -26,11 +26,14 @@ function App() {
   let [missionInput, setMissionInput] = useState('');
   let [profileImage, setProfileImage] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(null);
+  let [showAlert, setShowAlert] = useState(false);
+  const [alertContent, setAlertContent] = useState('');
+  const [alertImage, setAlertImage] = useState('');
   let [tap, setTap] = useState(0);
   let navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
+    axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
     .then(res => {
       if(res.data === false){
         setIsLoggedIn(false);
@@ -48,7 +51,7 @@ function App() {
   
   const fetchProfileImage = async () => {
     try {
-      const res = await axios.get('http://www.missiondreamteam.kro.kr/api/ProfileImageShow.php');
+      const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageShow.php');
       let originalPath = res.data.profilePath;
       if (originalPath != null) {
         if (originalPath === '/img/default_profile.png') {
@@ -65,7 +68,7 @@ function App() {
   
   const fetchUserInfo = async () => {
     try {
-      const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetInfo.php');
+      const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetInfo.php');
       const userData = res.data;
       setUserName(userData.name);
       const missionCnt = userData.totalMissionCnt - userData.noMissionCnt
@@ -100,7 +103,7 @@ function App() {
         return; // 미션 입력란이 비어 있으면 함수 종료
       }
       // 새로운 미션 추가
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Insert_mission.php', {
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Insert_mission.php', {
         mission: missionInput // 미션 내용
       });
     
@@ -119,7 +122,7 @@ function App() {
       console.error('Error adding mission:', error);
     }
   };
-  
+
   return (
     <div className="App">
       <div className="content">
@@ -138,7 +141,7 @@ function App() {
                   <h6>today { point }</h6>
                   <img className="imgs" onClick={() => { navigate('/updateinfo') }} src="/img/gear.png"/>
                   <button className="button-logout" onClick={()=>{
-                    axios.post('http://www.missiondreamteam.kro.kr/api/LogOut.php')
+                    axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogOut.php')
                     .then(res => {
                       navigate('/login')
                     })
@@ -170,7 +173,8 @@ function App() {
                 </Nav>
               </div>
               {
-                tap == 0 ? <ToDo setCreate={setCreate} setJoin={setJoin} groupList={groupList} missionList={missionList} setMissionList={setMissionList} setGroupList={setGroupList} navigate={navigate} userName={userName} point={point} profileImage={profileImage}/> : null
+                tap == 0 ? <ToDo setCreate={setCreate} setJoin={setJoin} groupList={groupList} missionList={missionList} setMissionList={setMissionList} setGroupList={setGroupList} navigate={navigate} userName={userName} point={point} profileImage={profileImage}
+                setAlertContent={setAlertContent} setAlertImage={setAlertImage} setShowAlert={setShowAlert}/> : null
               }
               {
                 tap == 1 ? <MyCalendar/> : null
@@ -178,7 +182,7 @@ function App() {
             </div>
           }/>
           <Route path="/group/*" element={ <Group userName={userName} point={point} profileImage={profileImage} fetchProfileImage={fetchProfileImage}/> }/>
-          <Route path="/updateinfo" element={ <UpdateInfo/> }/>
+          <Route path="/updateinfo" element={ <UpdateInfo userName={userName}/> }/>
           </>
         ) : (
           <>
@@ -191,9 +195,10 @@ function App() {
         )}
         <Route path="*" element={<Page404 navigate={navigate} isLoggedIn={isLoggedIn}/>}/>
       </Routes>
-      <CreateGroup create={create} setCreate={setCreate} setGroupList={setGroupList}/>
-      <JoinGroup join={join} setJoin={setJoin} groupList={groupList} setGroupList={setGroupList}/>
-      <ChangeProfileImage change={change} setChange={setChange} profileImage={profileImage} setProfileImage={setProfileImage}/>
+      <CreateGroup create={create} setCreate={setCreate} setGroupList={setGroupList} showAlert={showAlert} setShowAlert={setShowAlert} alertContent={alertContent} setAlertContent={setAlertContent} alertImage={alertImage} setAlertImage={setAlertImage}/>
+      <JoinGroup join={join} setJoin={setJoin} groupList={groupList} setGroupList={setGroupList} showAlert={showAlert} setShowAlert={setShowAlert} alertContent={alertContent} setAlertContent={setAlertContent} alertImage={alertImage} setAlertImage={setAlertImage}/>
+      <ChangeProfileImage change={change} setChange={setChange} profileImage={profileImage} setProfileImage={setProfileImage} showAlert={showAlert} setShowAlert={setShowAlert} alertContent={alertContent} setAlertContent={setAlertContent} alertImage={alertImage} setAlertImage={setAlertImage}/>
+      <AlertModal showAlert={showAlert} setShowAlert={setShowAlert} alertContent={alertContent} alertImage={alertImage}/>
       </div>
       {['/'].includes(window.location.pathname) && <Footer />}
     </div>
@@ -210,7 +215,7 @@ const Footer = () => {
 
 const fetchMissions = async (setMissionList) => {
   try {
-    const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/Show_mission.php?`)
+    const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/Show_mission.php?`)
     if (res.data == null) {
       setMissionList([]);
     } else {
@@ -227,7 +232,7 @@ const fetchMissions = async (setMissionList) => {
 
 const fetchGroups = async (setGroupList) => {
   try {
-      const res = await axios.get(`http://www.missiondreamteam.kro.kr/api/ShowGroup.php?`)
+      const res = await axios.get(`http://localhost/MISSION_DREAM_TEAM/PHP/ShowGroup.php?`)
       setGroupList(res.data)
   } catch (error) {
       console.error('Error fetching missions:', error)
@@ -252,7 +257,7 @@ function ToDo(props) {
 
     if (currentHour >= 5 && currentHour < 21) {
       try {
-        const res = await axios.post('http://www.missiondreamteam.kro.kr/api/Delete_mission.php', {
+        const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/Delete_mission.php', {
           mission_idx: props.missionList[i][0]
         })
         fetchMissions(props.setMissionList);
@@ -260,7 +265,9 @@ function ToDo(props) {
         console.error('Error deleting mission:', error);
       }
     } else {
-      alert("미션은 05:00~21:00에만 삭제 가능합니다!");
+      props.setAlertContent("미션은 05:00~21:00에만 삭제 가능합니다!");
+      props.setAlertImage('/img/dream_X.gif');
+      props.setShowAlert(true);
     }
   };
   
@@ -274,7 +281,7 @@ function ToDo(props) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/MissionImageUpload.php', formData, {
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/MissionImageUpload.php', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -383,6 +390,19 @@ function ToDo(props) {
 function MissionPhoto(props) {
   const modalTitle = props.photoMissionName;
 
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            props.setPhoto(false);
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+        window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [props.setPhoto]);
+
   return (
       <Modal show={props.photo} onHide={() => {props.setPhoto(false)}} className="main-modal">
           <Modal.Header closeButton>
@@ -391,6 +411,11 @@ function MissionPhoto(props) {
           <Modal.Body>
               <img src={props.photoSrc} alt={modalTitle} style={{ width: '100%' }} />
           </Modal.Body>
+          <Modal.Footer>
+                <Button variant="secondary" className="modalClose" onClick={() => {props.setPhoto(false)}}>
+                    닫기
+                </Button>
+            </Modal.Footer>
       </Modal>
   );
 }
@@ -406,7 +431,7 @@ function MyCalendar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axios.get('http://www.missiondreamteam.kro.kr/api/GetPersonalRecord.php');
+        const res = await axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/GetPersonalRecord.php');
         if (res.data) {
           const formattedData = res.data.map(entry => ({
             date: entry.date.split(' ')[0],
@@ -573,7 +598,7 @@ function CreateGroup(props) {
     const checkGroupName = async () => {
       if (groupName) {
         try {
-          const response = await axios.post('http://www.missiondreamteam.kro.kr/api/GroupNameCheck.php', { groupName });
+          const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/GroupNameCheck.php', { groupName });
           setIsGroupNameUnique(response.data);
         } catch (error) {
           console.log(error);
@@ -612,14 +637,16 @@ function CreateGroup(props) {
     const selectedPrice = parseInt(selectedPriceString.replace(/[^\d]/g, ''), 10);
 
     try {
-      const response = await axios.post('http://www.missiondreamteam.kro.kr/api/CreateGroup.php', {
+      const response = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/CreateGroup.php', {
         group_name: groupName,
         penaltyPerPoint: selectedPrice,
         group_notice: groupNotice,
         group_password: groupPassword
       });
       if (response.data == true) {
-        alert('[ '+groupName+' ] 그룹이 생성되었습니다!')
+        props.setAlertContent('[ '+groupName+' ] 그룹이 생성되었습니다!');
+        props.setAlertImage('/img/dream_O.gif');
+        props.setShowAlert(true);
         props.setCreate(false);
         fetchGroups(props.setGroupList);
       }
@@ -708,6 +735,12 @@ function JoinGroup(props) {
     const nameIsEmpty = checkField('name', '그룹 이름을 입력해주세요.');
     const passwordIsEmpty = checkField('password', '비밀번호를 입력해주세요.');
     let groupNames = []
+
+    if (nameIsEmpty || passwordIsEmpty) {
+      props.setAlertContent('그룹 이름 및 비밀번호를 입력해주세요!');
+      props.setAlertImage('/img/dream_X.gif');
+      props.setShowAlert(true);
+    }
     
     if (props.groupList) {
       groupNames = props.groupList.map(group => group.groupName.group_name);
@@ -718,23 +751,29 @@ function JoinGroup(props) {
         const inputPw = document.getElementById('password').value;
         
         if (groupNames.includes(inputName)) {
-          alert('이미 가입된 그룹입니다.')
+          props.setAlertContent('이미 가입된 그룹입니다.');
+          props.setAlertImage('/img/dream_X.gif');
+          props.setShowAlert(true);
           props.setJoin(false)
         }
         else {
-          axios.post('http://www.missiondreamteam.kro.kr/api/EnterGroup.php',
+          axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/EnterGroup.php',
           {
               group_name: inputName,
               group_password: inputPw
           })
           .then((res)=>{
               if (res.data == true) {
-                  alert('[ '+inputName+' ] 그룹에 가입되었습니다!')
+                  props.setAlertContent('[ '+inputName+' ] 그룹에 가입되었습니다!');
+                  props.setAlertImage('/img/dream_O.gif');
+                  props.setShowAlert(true);
                   props.setJoin(false)
                   fetchGroups(props.setGroupList);
               }
               else {
-                  alert('그룹 이름 또는 비밀번호를 확인해주세요.')
+                  props.setAlertContent('그룹 이름 또는 비밀번호를 확인해주세요.');
+                  props.setAlertImage('/img/dream_X.gif');
+                  props.setShowAlert(true);
               }
           })
           .catch((err)=>{
@@ -744,15 +783,11 @@ function JoinGroup(props) {
     }
   }
   
-  const checkField = (fieldId, checkText) => {
-    let fieldValue = document.getElementById(fieldId).value;
-    if (fieldValue == '') {
-        alert(checkText)
-        return true
+  const checkField = (fieldRef, checkText) => {
+    if (!fieldRef || !fieldRef.value) {
+      return true;
     }
-    else{
-        return false
-    }
+    return false
   }
 
   return (
@@ -774,6 +809,7 @@ function ChangeProfileImage(props) {
   const [selectedFile, setFile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [showProfileConfirm, setShowProfileConfirm] = useState(false);
 
   useEffect(() => {
     if (!props.change) {
@@ -787,9 +823,15 @@ function ChangeProfileImage(props) {
     setFile(file);
   };
 
+  const handleRemove = async () => {
+    setShowProfileConfirm(true); // 확인 모달 보이기
+  };
+  
   const handleUpload = async () => {
     if (!selectedFile) {
-      alert('파일을 선택해주세요.');
+      props.setAlertContent('파일을 선택해주세요.');
+      props.setAlertImage('/img/dream_X.gif');
+      props.setShowAlert(true);
       return;
     }
 
@@ -797,13 +839,15 @@ function ChangeProfileImage(props) {
     formData.append('imgFile', selectedFile);
 
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/ProfileImageUpload.php', formData,{
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/ProfileImageUpload.php', formData,{
         headers: {
           'Content-Type': 'multipart/form-data',
         }
       });
       if (res.data == true) {
-        alert("프로필 사진이 변경되었습니다!");
+        props.setAlertContent("프로필 사진이 변경되었습니다!");
+        props.setAlertImage('/img/dream_O.gif');
+        props.setShowAlert(true);
         props.setProfileImage('')
         props.setChange(false);
       }
@@ -815,17 +859,13 @@ function ChangeProfileImage(props) {
     }
   };
 
-  const handleRemove = async () => {
-    const confirmRemove = window.confirm('정말로 프로필 사진을 제거하시겠습니까?');
-
-    if (!confirmRemove) {
-      return;
-    }
-
+  const confirmRemoveHandler = async () => {
     try {
-      const res = await axios.post('http://www.missiondreamteam.kro.kr/api/DeleteProfileImage.php');
+      const res = await axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/DeleteProfileImage.php');
       if (res.data) {
-        alert("프로필 사진이 제거되었습니다!");
+        props.setAlertContent("프로필 사진이 제거되었습니다!");
+        props.setAlertImage('/img/dream_O.gif');
+        props.setShowAlert(true);
         props.setProfileImage('')
         props.setChange(false);
       } else {
@@ -842,6 +882,7 @@ function ChangeProfileImage(props) {
   };
 
   return (
+    <>
     <Modal show={props.change} onHide={() => props.setChange(false) } className="main-modal">
       <Modal.Header closeButton>
         <Modal.Title className='main-modal-title'>프로필 사진</Modal.Title>
@@ -866,13 +907,31 @@ function ChangeProfileImage(props) {
           <>
             <img className="img-profile-change" src={props.profileImage}></img>
             <div className='modal-change-buttons'>
-              <button className='button-profile profile-remove' onClick={handleRemove}>제거</button>
+              <button className='button-profile profile-remove' onClick={props.profileImage !== '/img/default_profile.png' ? handleRemove : null}>제거</button>
               <button className='button-profile' onClick={()=> {setIsEditing(true);}}>변경</button>
             </div>
           </>
         )}
       </Modal.Body>
     </Modal>
+    <Modal show={showProfileConfirm} onHide={() => setShowProfileConfirm(false)} className='modal'>
+    <Modal.Header closeButton>
+          <Modal.Title></Modal.Title>
+    </Modal.Header>
+    <Modal.Body className='text-center modalBody'>
+        <p>정말로 프로필 사진을 제거하시겠습니까?</p>
+        <img className="dreams" src="/img/dream_loading_2.gif" alt="Result" style={{ width: '100px' }}/>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button className="modalClose" variant="secondary" onClick={() => setShowProfileConfirm(false)}>
+            아니요
+        </Button>
+        <Button className="doCalculate" variant="primary" onClick={confirmRemoveHandler}>
+            예
+        </Button>
+    </Modal.Footer>
+  </Modal>
+  </>
   );
 }
 
@@ -894,4 +953,35 @@ function Page404(props) {
   );
 }
 
+function AlertModal({showAlert, setShowAlert, alertContent, alertImage}) {
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'Enter') {
+        setShowAlert(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+        window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [showAlert]);
+
+  return(
+    <Modal className="modal" show={showAlert} onHide={() => {setShowAlert(false);}}>
+      <Modal.Header closeButton>
+          <Modal.Title></Modal.Title>
+      </Modal.Header>
+      <Modal.Body className='text-center modalBody'>
+          <p>{alertContent}</p>
+          {alertImage && <img className="dreams" src={alertImage} alt="Result" style={{ width: '100px' }} />}
+      </Modal.Body>
+      <Modal.Footer>
+          <Button className="modalClose" variant="secondary" onClick={() => {setShowAlert(false);}}>
+              닫기
+          </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
 export default App;
