@@ -18,7 +18,7 @@ function LogIn(props) {
     const [alertImage, setAlertImage] = useState('');
 
     useEffect(() => {
-        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/CheckLoginState.php')
+        axios.get('http://www.missiondreamteam.kro.kr/api/CheckLoginState.php')
         .then(res => {
         if(res.data === true){
             navigate('/');
@@ -28,7 +28,7 @@ function LogIn(props) {
         console.error('Error fetching user info:', error)
         })
 
-        axios.get('http://localhost/MISSION_DREAM_TEAM/PHP/UserCnt.php')
+        axios.get('http://www.missiondreamteam.kro.kr/api/UserCnt.php')
         .then(res => {
             setUserCount(res.data);
         })
@@ -74,7 +74,7 @@ function LogIn(props) {
             const inputPw = document.getElementById('password').value;
             const keepLogIn = document.getElementById('keepLogIn').checked;
     
-            axios.post('http://localhost/MISSION_DREAM_TEAM/PHP/LogIn.php',
+            axios.post('http://www.missiondreamteam.kro.kr/api/LogIn.php',
             {
                 id: inputId,
                 password: inputPw,
