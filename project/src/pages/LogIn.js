@@ -30,7 +30,7 @@ function LogIn(props) {
 
         axios.get('http://www.missiondreamteam.kro.kr/api/UserCnt.php')
         .then(res => {
-            setUserCount(res.data);
+            setUserCount(res.data.cnt);
         })
         .catch(error => {
             console.error('Error fetching user count:', error)
